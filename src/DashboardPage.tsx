@@ -38,7 +38,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
         };
 
         dispatch({ type: 'UPDATE_ASSESSMENT', payload: assessmentData });
-
+        
         if (!geminiApiKey) {
             console.error("VITE_GEMINI_API_KEY is not configured.");
             const fallbackText = `Olá, ${state.user?.name}! Recebemos sua avaliação. Estamos muito animadas para começar esta jornada com você e te ajudar a alcançar seu objetivo. Sua primeira aula já está liberada. Vamos com tudo!`;
@@ -101,7 +101,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
             });
 
             const feedbackText = response.text;
-            setFeedback(feedbackText);
+            setFeedback(feedbackText ?? null);
 
         } catch (error) {
             console.error("Error generating feedback with AI:", error);

@@ -201,7 +201,7 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([userToInsert] as any);
+                    .insert([userToInsert]);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation
