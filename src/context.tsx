@@ -250,7 +250,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         
         // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
 
         if (error) {
             console.error('Error saving user data to Supabase:', error);
@@ -269,6 +269,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
+    sessionStorage.removeItem('gratuitinho_user_email');
+    sessionStorage.removeItem('isAdminAuthenticated');
   }, []);
 
   if (areCredentialsMissing) {
