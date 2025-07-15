@@ -101,7 +101,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
             });
 
             const feedbackText = response.text;
-            setFeedback(feedbackText);
+            setFeedback(feedbackText ?? null);
 
         } catch (error) {
             console.error("Error generating feedback with AI:", error);
