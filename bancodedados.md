@@ -1,3 +1,4 @@
+
 # Guia de Banco de Dados e Hospedagem (Supabase + Vercel)
 
 Este guia foi criado para te ajudar a configurar e colocar seu aplicativo no ar, mesmo que você não tenha nenhum conhecimento de programação. Vamos usar duas ferramentas gratuitas e poderosas:
@@ -90,29 +91,50 @@ WITH CHECK (true);
 5.  Depois de colar, clique no botão verde **"RUN"**.
 6.  Pronto! Se tudo deu certo, você verá uma mensagem "Success. No rows returned". Sua tabela de alunas está criada e configurada!
 
-### Passo 4: Conectar o Aplicativo com o Banco de Dados
-Agora, vamos dizer ao seu aplicativo onde o banco de dados está.
+---
 
-1.  No menu à esquerda da Supabase, clique no ícone de engrenagem (**Project Settings**).
-2.  Na nova tela, clique em **"API"**.
-3.  Você verá duas informações importantes:
-    *   **Project URL**
-    *   **Project API Keys** (precisamos da chave `anon` `public`)
-4.  Abra o arquivo `context.tsx` no seu projeto.
-5.  Você encontrará as seguintes linhas no topo do arquivo:
-    ```javascript
-    const supabaseUrl = 'COLE_AQUI_A_SUA_URL_DO_SUPABASE';
-    const supabaseKey = 'COLE_AQUI_A_SUA_CHAVE_ANON_DO_SUPABASE';
-    ```
-6.  **Copie** a sua **URL** da Supabase e **cole** no lugar de `'COLE_AQUI_A_SUA_URL_DO_SUPABASE'`.
-7.  **Copie** a sua chave **anon public** da Supabase e **cole** no lugar de `'COLE_AQUI_A_SUA_CHAVE_ANON_DO_SUPABASE'`.
-8.  Salve o arquivo.
+## Parte 2: Configurando as Chaves e Variáveis de Ambiente
 
-**Parabéns! A primeira parte está concluída. Seu aplicativo já sabe como conversar com seu banco de dados.**
+Para que o aplicativo funcione, tanto localmente quanto online, ele precisa de acesso a algumas chaves secretas. Nós as gerenciamos com "Variáveis de Ambiente".
+
+### Passo 1: Obter as Chaves Secretas
+
+Você vai precisar de 3 chaves:
+1.  **Supabase URL:**
+    *   No painel do seu projeto Supabase, vá em **Project Settings** (ícone de engrenagem) > **API**.
+    *   Copie o valor do campo **Project URL**.
+2.  **Supabase Anon (public) Key:**
+    *   Na mesma página da API, na seção **Project API Keys**, copie o valor da chave `anon` `public`.
+3.  **Google Gemini API Key:**
+    *   Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
+    *   Faça login com sua conta Google.
+    *   Clique em **"Create API key in new project"**.
+    *   Copie a chave gerada.
+
+**Guarde essas 3 chaves em um local seguro.**
+
+### Passo 2: Configurar para Desenvolvimento Local
+
+Para rodar o aplicativo no seu computador, você precisa criar um arquivo para guardar essas chaves.
+
+1.  Na pasta principal do seu projeto, crie um novo arquivo chamado `.env`.
+2.  Abra este arquivo e cole o conteúdo abaixo, substituindo os valores pelos que você copiou no Passo 1.
+
+```
+# .env
+
+# Supabase credentials
+VITE_SUPABASE_URL="COLE_AQUI_SUA_URL_DO_SUPABASE"
+VITE_SUPABASE_KEY="COLE_AQUI_SUA_CHAVE_ANON_DO_SUPABASE"
+
+# Google Gemini API Key
+VITE_GEMINI_API_KEY="COLE_AQUI_SUA_CHAVE_DA_API_DO_GEMINI"
+```
+3.  Salve o arquivo. **Importante:** Este arquivo `.env` nunca deve ser enviado para o GitHub. Ele é apenas para o seu uso local.
 
 ---
 
-## Parte 2: Publicando o Aplicativo na Vercel
+## Parte 3: Publicando o Aplicativo na Vercel
 
 ### Passo 1: Colocar seu código no GitHub
 A Vercel precisa encontrar seu código em um repositório do GitHub.
@@ -121,28 +143,26 @@ A Vercel precisa encontrar seu código em um repositório do GitHub.
 2.  Crie um **"new repository"** (novo repositório). Dê a ele o nome que quiser.
 3.  Faça o upload de todos os arquivos do seu projeto para este repositório. A maneira mais fácil para iniciantes é usar o [GitHub Desktop](https://desktop.github.com/).
 
-### Passo 2: Configurar a Chave da IA (Gemini)
-O aplicativo usa a Inteligência Artificial do Google para gerar feedbacks. Precisamos dar a ele uma chave de acesso.
-
-1.  Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
-2.  Faça login com sua conta Google.
-3.  Clique em **"Create API key in new project"**.
-4.  Copie a chave que foi gerada. **Guarde-a bem!**
-
-### Passo 3: Publicar na Vercel
+### Passo 2: Publicar na Vercel e Configurar as Chaves
 1.  Acesse [vercel.com](https://vercel.com) e crie sua conta usando o **GitHub**.
 2.  No painel da Vercel, clique em **"Add New..." -> "Project"**.
 3.  A Vercel vai mostrar seus repositórios do GitHub. **Selecione o repositório do seu aplicativo** que você criou no Passo 1 e clique em **"Import"**.
-4.  A Vercel já vai entender como configurar o projeto. Antes de publicar, precisamos adicionar a chave da IA.
+4.  A Vercel vai detectar que é um projeto Vite e configurar tudo automaticamente. Antes de publicar, precisamos adicionar as chaves secretas.
 5.  Encontre e expanda a seção **"Environment Variables"** (Variáveis de Ambiente).
-6.  Adicione uma nova variável:
-    *   **NAME:** `API_KEY`
-    *   **VALUE:** Cole aqui a chave da API do Google que você copiou no Passo 2.
-7.  Clique em **"Add"**.
-8.  Agora, clique no botão azul **"Deploy"**.
-9.  Aguarde alguns minutos. A Vercel vai instalar tudo e publicar seu site.
+6.  Adicione as 3 variáveis, uma de cada vez, usando as chaves que você obteve na Parte 2:
+    *   **Variável 1:**
+        *   **NAME:** `VITE_SUPABASE_URL`
+        *   **VALUE:** Cole aqui a sua **URL do Supabase**.
+    *   **Variável 2:**
+        *   **NAME:** `VITE_SUPABASE_KEY`
+        *   **VALUE:** Cole aqui a sua **chave anon do Supabase**.
+    *   **Variável 3:**
+        *   **NAME:** `VITE_GEMINI_API_KEY`
+        *   **VALUE:** Cole aqui a sua **chave da API do Gemini**.
+7.  Após adicionar as três, clique no botão azul **"Deploy"**.
+8.  Aguarde alguns minutos. A Vercel vai instalar tudo e publicar seu site.
 
-### Passo 4: Seu aplicativo está no ar!
+### Passo 3: Seu aplicativo está no ar!
 Quando o processo terminar, a Vercel vai te dar um link (ex: `meuappfitness.vercel.app`).
 
 **É isso! Seu aplicativo está online, conectado ao banco de dados e pronto para receber alunas!** Qualquer alteração que você fizer no código e enviar para o GitHub será automaticamente atualizada no site pela Vercel.

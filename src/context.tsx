@@ -1,6 +1,4 @@
 
-
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User } from './types.ts';

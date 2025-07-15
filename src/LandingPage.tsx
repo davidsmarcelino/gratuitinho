@@ -1,8 +1,6 @@
 
-
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
 import { User, Testimonial } from './types.ts';
 import { 
@@ -172,13 +170,14 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            const response = await supabase
+            // Using `any` to avoid "Type instantiation is excessively deep" error with Supabase complex types.
+            const response: any = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
-
             const { data: existingUser, error: fetchError } = response;
+
 
             if (fetchError) {
                 throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
@@ -398,9 +397,6 @@ const LandingPage = () => {
             
             <footer className="text-center p-6 bg-dark-800 border-t border-dark-700">
                  <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} FitConsult. Todos os direitos reservados.</p>
-                <Link to="/admin" className="text-xs text-gray-500 hover:text-brand transition-colors">
-                    Painel do Admin
-                </Link>
             </footer>
 
             {/* Sticky CTA */}
