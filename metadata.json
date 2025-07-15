@@ -1,0 +1,6 @@
+{
+  "name": "Gratuitinho Fitness App",
+  "description": "A fitness coaching application that provides a set of free lessons to users after a quick assessment. It includes a dashboard to track progress, an upsell page for premium content, and an admin panel to manage application settings and users.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
