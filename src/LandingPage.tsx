@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -170,14 +169,13 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            // Using `any` to avoid "Type instantiation is excessively deep" error with Supabase complex types.
-            const response: any = await supabase
+            const response = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
-            const { data: existingUser, error: fetchError } = response;
 
+            const { data: existingUser, error: fetchError } = response;
 
             if (fetchError) {
                 throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);

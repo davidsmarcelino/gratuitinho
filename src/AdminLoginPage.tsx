@@ -41,6 +41,7 @@ const AdminLoginPage = () => {
                             id="login"
                             name="login"
                             type="text"
+                            autoComplete="username"
                             required
                             value={formData.login}
                             onChange={handleChange}
@@ -54,6 +55,7 @@ const AdminLoginPage = () => {
                             id="password"
                             name="password"
                             type="password"
+                            autoComplete="current-password"
                             required
                             value={formData.password}
                             onChange={handleChange}
