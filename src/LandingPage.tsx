@@ -154,13 +154,11 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            const response = await supabase
+            const { data: existingUser, error: fetchError } = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
-
-            const { data: existingUser, error: fetchError } = response;
 
             if (fetchError) {
                 throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
@@ -180,22 +178,20 @@ const LandingPage = () => {
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
             } else {
-                // User does not exist, create new one
-                const newUserPayload = {
-                    ...formData,
-                    registrationDate: new Date().toISOString(),
-                    progress: [] as number[],
-                };
-
+                // User does not exist, create new one.
                 // We create a plain object for insertion to avoid deep type instantiation errors with the Supabase client.
                 const userToInsert = {
-                    ...newUserPayload,
+                    name: formData.name,
+                    email: formData.email,
+                    whatsapp: formData.whatsapp,
+                    registrationDate: new Date().toISOString(),
+                    progress: [] as number[],
                     assessment: null,
                 };
 
                 const insertResult = await supabase
                     .from('users')
-                    .insert([userToInsert] as any);
+                    .insert(userToInsert);
 
                 if (insertResult.error) {
                     if (insertResult.error.code === '23505') { // Handle unique constraint violation
@@ -206,8 +202,7 @@ const LandingPage = () => {
                 
                 // If insert is successful, create the full User object for the state
                 const newUser: User = {
-                    ...newUserPayload,
-                    assessment: null,
+                    ...userToInsert
                 };
                 dispatch({ type: 'ADD_USER', payload: newUser });
                 dispatch({ type: 'SET_USER', payload: newUser });

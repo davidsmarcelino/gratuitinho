@@ -1,10 +1,8 @@
 
-
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from './context.tsx';
-import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage, FreeClassInfo } from './types.ts';
+import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
 import { CTAButton, CheckCircleIcon, exportToCSV, MiniProgressBar, TrendingUpIcon, UsersIcon, PencilIcon, TrashIcon, PlusIcon } from './components.tsx';
 
 type AdminTab = 'metrics' | 'users' | 'lessons' | 'content' | 'settings';

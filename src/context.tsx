@@ -282,7 +282,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         
         // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const upsertResult = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
+        const upsertResult = await supabase.from('users').upsert(userPayload, { onConflict: 'email' });
 
         if (upsertResult.error) {
             console.error('Error saving user data to Supabase:', upsertResult.error);
