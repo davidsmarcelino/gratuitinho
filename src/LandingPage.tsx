@@ -153,16 +153,18 @@ const LandingPage = () => {
         setError(null);
 
         try {
-            // Check for existing user first by destructuring the response.
-            // This prevents a "Type instantiation is excessively deep" error with TypeScript.
-            const { data: existingUser, error } = await supabase
+            // Check for existing user first.
+            // Using a two-step await to avoid potential "Type instantiation is excessively deep" errors.
+            const response = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
 
-            if (error) {
-                throw new Error(`Erro ao verificar usuário: ${error.message}`);
+            const { data: existingUser, error: fetchError } = response;
+
+            if (fetchError) {
+                throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
             }
 
             if (existingUser) {
@@ -190,7 +192,7 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([userToInsert] as any);
+                    .insert([userToInsert]);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation
@@ -264,7 +266,7 @@ const LandingPage = () => {
                                 <img src={heroImage} alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
                                 <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-dark-900 p-3 rounded-lg shadow-lg">
                                     <p className="font-bold">Resultados Reais</p>
-                                    <p className="text-sm">Transformação em poucos dias</p>
+                                    <p className="text-sm">Transformação em 90 dias</p>
                                 </div>
                             </div>
                         </div>

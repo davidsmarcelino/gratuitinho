@@ -156,7 +156,8 @@ const appReducer = (state: AppState, action: Action): AppState => {
           users: state.users.map(u => u.email === updatedUserWithProgress.email ? updatedUserWithProgress : u),
       };
     case 'UPDATE_SETTINGS':
-      return { ...state, settings: action.payload };
+        localStorage.setItem('gratuitinho_settings', JSON.stringify(action.payload));
+        return { ...state, settings: action.payload };
     case 'SET_SYNC_STATUS':
       return { ...state, syncStatus: action.payload };
     case 'SET_STATE':
@@ -190,29 +191,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncStatus: 'idle',
   });
 
-  // Effect to load initial settings from localStorage and users from Supabase
+  // Effect to load initial settings from Supabase and users
   useEffect(() => {
     const loadInitialData = async () => {
       let loadedSettings = INITIAL_SETTINGS;
       try {
-        const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
-        if (storedSettingsJSON) {
-           // Deep merge to ensure new properties from INITIAL_SETTINGS are added
-          // while preserving user's existing settings.
-          const storedSettings = JSON.parse(storedSettingsJSON);
-          loadedSettings = {
-            ...INITIAL_SETTINGS,
-            ...storedSettings,
-            landingPage: { ...INITIAL_SETTINGS.landingPage, ...storedSettings.landingPage },
-            freeClassesSection: { ...INITIAL_SETTINGS.freeClassesSection, ...storedSettings.freeClassesSection },
-            coach: { ...INITIAL_SETTINGS.coach, ...storedSettings.coach },
-            upsellPage: { ...INITIAL_SETTINGS.upsellPage, ...storedSettings.upsellPage },
-            lessons: storedSettings.lessons || INITIAL_SETTINGS.lessons,
-            testimonials: storedSettings.testimonials || INITIAL_SETTINGS.testimonials,
-          };
+        // Fetch settings from Supabase first
+        const { data: settingsData, error: settingsError } = await supabase
+            .from('settings')
+            .select('config')
+            .eq('id', 1)
+            .single();
+
+        if (settingsError) {
+            console.error("Could not fetch settings from Supabase, falling back to local.", settingsError);
+            // Fallback to localStorage if Supabase fails
+            const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
+            if (storedSettingsJSON) {
+                loadedSettings = JSON.parse(storedSettingsJSON);
+            }
+        } else if (settingsData) {
+            console.log("Settings successfully loaded from Supabase.");
+            // Deep merge to ensure new properties from INITIAL_SETTINGS are added
+            const dbSettings = settingsData.config as AdminSettings;
+            loadedSettings = {
+                ...INITIAL_SETTINGS,
+                ...dbSettings,
+                landingPage: { ...INITIAL_SETTINGS.landingPage, ...dbSettings.landingPage },
+                freeClassesSection: { ...INITIAL_SETTINGS.freeClassesSection, ...dbSettings.freeClassesSection },
+                coach: { ...INITIAL_SETTINGS.coach, ...dbSettings.coach },
+                upsellPage: { ...INITIAL_SETTINGS.upsellPage, ...dbSettings.upsellPage },
+             };
+             // Cache the loaded settings in localStorage
+             localStorage.setItem('gratuitinho_settings', JSON.stringify(loadedSettings));
         }
+
       } catch (error) {
-        console.error("Failed to load settings from localStorage", error);
+        console.error("Failed to load settings", error);
       }
       
       try {
@@ -250,14 +265,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Effect to save settings to localStorage
-  useEffect(() => {
-    if (state.appStatus === 'ready') {
-      localStorage.setItem('gratuitinho_settings', JSON.stringify(state.settings));
-    }
-  }, [state.settings, state.appStatus]);
-
+  
   // Effect to save updated user to Supabase and session storage
   const userJson = JSON.stringify(state.user);
   useEffect(() => {
@@ -274,8 +282,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        // By creating a plain payload object from the user state, we prevent complex type-checking issues
-        // with the Supabase client library that can lead to "type instantiation is excessively deep" errors.
         const userPayload = {
             name: user.name,
             email: user.email,
@@ -285,14 +291,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             progress: user.progress
         };
         
-        // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const upsertResult = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
 
-        if (upsertResult.error) {
-            console.error('Error saving user data to Supabase:', upsertResult.error);
+        if (error) {
+            console.error('Error saving user data to Supabase:', error);
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
         } else {
-            console.log("User data successfully synced with Supabase.");
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });
             setTimeout(() => dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' }), 2000);
         }

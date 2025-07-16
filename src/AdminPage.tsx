@@ -1,6 +1,7 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useApp } from './context.tsx';
+import { useApp, supabase } from './context.tsx';
 import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
 import { CTAButton, CheckCircleIcon, exportToCSV, MiniProgressBar, TrendingUpIcon, UsersIcon, PencilIcon, TrashIcon, PlusIcon } from './components.tsx';
 
@@ -27,13 +28,27 @@ const AdminPage = () => {
     const [activeTab, setActiveTab] = useState<AdminTab>('metrics');
     const navigate = useNavigate();
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
-        setTimeout(() => {
+        try {
+            const { error } = await supabase
+                .from('settings')
+                .update({ config: settings } as any) // Cast to 'any' to fix 'never' type error
+                .eq('id', 1);
+
+            if (error) {
+                throw error;
+            }
+
+            // Also update the local state and localStorage cache
+            dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
+            alert('Configurações salvas com sucesso!');
+        } catch (error: any) {
+            console.error('Erro ao salvar configurações:', error);
+            alert(`Falha ao salvar as configurações: ${error.message}`);
+        } finally {
             setIsSaving(false);
-            alert('Configurações salvas!');
-        }, 1000);
+        }
     };
 
     const handleAdminLogout = () => {
