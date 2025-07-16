@@ -67,10 +67,14 @@ export type AdminSettings = {
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
   };
-   freeClassesSection: {
+  freeClassesSection: {
     title: string;
     subtitle: string;
     classes: FreeClassInfo[];
+  };
+  dashboard: {
+    promoLinkText: string;
+    promoLinkUrl: string;
   };
   coach: Coach;
   lessons: Lesson[];
@@ -86,6 +90,9 @@ export type AdminSettings = {
     fullPrice: string;
     promoPrice: string;
     ctaLink: string;
+    installmentsEnabled: boolean;
+    installmentsNumber: number;
+    installmentsPrice: string;
   };
   freeAccessDays: number;
   offerCountdownHours: number;

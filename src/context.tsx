@@ -1,4 +1,3 @@
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User } from './types.ts';
@@ -100,6 +99,10 @@ const INITIAL_SETTINGS: AdminSettings = {
       },
     ]
   },
+  dashboard: {
+    promoLinkText: 'Garanta com desconto consultoria VIP',
+    promoLinkUrl: '/upsell',
+  },
   coach: DEFAULT_COACH,
   lessons: DEFAULT_LESSONS,
   testimonials: DEFAULT_TESTIMONIALS,
@@ -120,6 +123,9 @@ const INITIAL_SETTINGS: AdminSettings = {
     fullPrice: 'R$497,00',
     promoPrice: 'R$197,00',
     ctaLink: '#',
+    installmentsEnabled: true,
+    installmentsNumber: 12,
+    installmentsPrice: 'R$19,70',
   },
   freeAccessDays: 7,
   offerCountdownHours: 24,
@@ -197,28 +203,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       let loadedSettings = INITIAL_SETTINGS;
       try {
         // Fetch settings from Supabase first
-        const { data: settingsData, error: settingsError } = await supabase
+        const settingsResponse = await supabase
             .from('settings')
             .select('config')
             .eq('id', 1)
             .single();
 
-        if (settingsError) {
-            console.error("Could not fetch settings from Supabase, falling back to local.", settingsError);
+        if (settingsResponse.error) {
+            console.error("Could not fetch settings from Supabase, falling back to local.", settingsResponse.error);
             // Fallback to localStorage if Supabase fails
             const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
             if (storedSettingsJSON) {
                 loadedSettings = JSON.parse(storedSettingsJSON);
             }
-        } else if (settingsData) {
+        } else if (settingsResponse.data) {
             console.log("Settings successfully loaded from Supabase.");
             // Deep merge to ensure new properties from INITIAL_SETTINGS are added
-            const dbSettings = settingsData.config as AdminSettings;
+            const dbSettings = settingsResponse.data.config as AdminSettings;
             loadedSettings = {
                 ...INITIAL_SETTINGS,
                 ...dbSettings,
                 landingPage: { ...INITIAL_SETTINGS.landingPage, ...dbSettings.landingPage },
                 freeClassesSection: { ...INITIAL_SETTINGS.freeClassesSection, ...dbSettings.freeClassesSection },
+                dashboard: { ...INITIAL_SETTINGS.dashboard, ...dbSettings.dashboard },
                 coach: { ...INITIAL_SETTINGS.coach, ...dbSettings.coach },
                 upsellPage: { ...INITIAL_SETTINGS.upsellPage, ...dbSettings.upsellPage },
              };
@@ -231,12 +238,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       
       try {
-        const { data: usersFromSupabase, error } = await supabase.from('users').select('*');
-        if (error) {
-            throw new Error(`Supabase fetch error: ${error.message}`);
+        const usersResponse = await supabase.from('users').select('*');
+        if (usersResponse.error) {
+            throw new Error(`Supabase fetch error: ${usersResponse.error.message}`);
         }
 
-        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => ({
+        const users: User[] = (usersResponse.data || []).map((dbUser: any) => ({
             name: dbUser.name,
             email: dbUser.email,
             whatsapp: dbUser.whatsapp,
@@ -291,10 +298,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             progress: user.progress
         };
         
-        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
+        const response = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
 
-        if (error) {
-            console.error('Error saving user data to Supabase:', error);
+        if (response.error) {
+            console.error('Error saving user data to Supabase:', response.error);
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
         } else {
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });

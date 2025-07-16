@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { User, Lesson } from './types.ts';
 import { useNavigate } from 'react-router-dom';
@@ -133,7 +132,7 @@ export const exportToCSV = (users: User[], lessons: Lesson[]) => {
 
 
 // ========= REUSABLE UI COMPONENTS =========
-export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: React.ReactNode; size?: 'md' | '2xl' | '3xl' }> = ({ isOpen, onClose, children, size = 'md' }) => {
+export const Modal: React.FC<{ isOpen: boolean; onClose?: () => void; children: React.ReactNode; size?: 'md' | '2xl' | '3xl' }> = ({ isOpen, onClose, children, size = 'md' }) => {
     if (!isOpen) return null;
 
     const sizeClass = {
@@ -145,7 +144,7 @@ export const Modal: React.FC<{ isOpen: boolean; onClose: () => void; children: R
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
             <div className={`bg-dark-900 rounded-lg shadow-xl w-full ${sizeClass} p-6 m-4 relative`} onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} className="absolute top-2 right-4 text-white text-3xl hover:text-gray-300 z-10">&times;</button>
+                {onClose && <button onClick={onClose} className="absolute top-2 right-4 text-white text-3xl hover:text-gray-300 z-10">&times;</button>}
                 {children}
             </div>
         </div>

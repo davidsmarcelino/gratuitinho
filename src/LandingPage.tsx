@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -86,7 +85,7 @@ const BeforeAndAfterCard: React.FC<{ beforeImage: string, afterImage: string, na
 );
 
 
-const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick }) => {
+const LandingPageHeader: React.FC<{ onCtaClick: () => void; showResultadosLink: boolean }> = ({ onCtaClick, showResultadosLink }) => {
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
         const element = document.getElementById(targetId);
@@ -104,7 +103,9 @@ const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick })
                 <h1 className="text-2xl font-bold font-heading">FitConsult</h1>
                 <nav className="hidden md:flex items-center space-x-8 text-sm">
                     <a href="#aulas" onClick={(e) => handleNavClick(e, 'aulas')} className="hover:text-brand transition-colors">Aulas</a>
-                    <a href="#resultados" onClick={(e) => handleNavClick(e, 'resultados')} className="hover:text-brand transition-colors">Resultados</a>
+                    {showResultadosLink && (
+                        <a href="#resultados" onClick={(e) => handleNavClick(e, 'resultados')} className="hover:text-brand transition-colors">Resultados</a>
+                    )}
                     <a href="#depoimentos" onClick={(e) => handleNavClick(e, 'depoimentos')} className="hover:text-brand transition-colors">Depoimentos</a>
                     <a href="#coach" onClick={(e) => handleNavClick(e, 'coach')} className="hover:text-brand transition-colors">Sobre</a>
                 </nav>
@@ -154,18 +155,17 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            // Using a two-step await to avoid potential "Type instantiation is excessively deep" errors.
-            const response = await supabase
+            const userResponse = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
-
-            const { data: existingUser, error: fetchError } = response;
-
-            if (fetchError) {
-                throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
+            
+            if (userResponse.error) {
+                throw new Error(`Erro ao verificar usuário: ${userResponse.error.message}`);
             }
+
+            const existingUser = userResponse.data;
 
             if (existingUser) {
                 // User exists, log them in
@@ -190,15 +190,15 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const { error: insertError } = await supabase
+                const insertResponse = await supabase
                     .from('users')
-                    .insert([userToInsert]);
+                    .insert([userToInsert] as any);
 
-                if (insertError) {
-                    if (insertError.code === '23505') { // Handle unique constraint violation
+                if (insertResponse.error) {
+                    if (insertResponse.error.code === '23505') { // Handle unique constraint violation
                         throw new Error('Este e-mail já está cadastrado.');
                     }
-                    throw new Error(`Erro ao criar usuário: ${insertError.message}`);
+                    throw new Error(`Erro ao criar usuário: ${insertResponse.error.message}`);
                 }
                 
                 // If insert is successful, create the full User object for the state
@@ -235,7 +235,7 @@ const LandingPage = () => {
     
     return (
         <div className="bg-dark-900 overflow-x-hidden">
-            <LandingPageHeader onCtaClick={handleOpenRegModal} />
+            <LandingPageHeader onCtaClick={handleOpenRegModal} showResultadosLink={state.settings.landingPage.beforeAndAfter.length > 0} />
             
             <main>
                 {/* Hero Section */}

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -31,13 +30,14 @@ const AdminPage = () => {
     const handleSave = async () => {
         setIsSaving(true);
         try {
-            const { error } = await supabase
+            const plainSettings = JSON.parse(JSON.stringify(settings));
+            const response = await supabase
                 .from('settings')
-                .update({ config: settings } as any) // Cast to 'any' to fix 'never' type error
+                .update({ config: plainSettings })
                 .eq('id', 1);
 
-            if (error) {
-                throw error;
+            if (response.error) {
+                throw response.error;
             }
 
             // Also update the local state and localStorage cache
@@ -295,6 +295,32 @@ const AdminPage = () => {
                                 </div>
                             </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Header do Dashboard</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label htmlFor="promoLinkText" className="block text-sm font-medium text-gray-300 mb-1">Texto do Link Promocional</label>
+                                        <input 
+                                            type="text" 
+                                            id="promoLinkText"
+                                            value={settings.dashboard.promoLinkText} 
+                                            onChange={e => handleInputChange(e, 'dashboard', 'promoLinkText')}
+                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label htmlFor="promoLinkUrl" className="block text-sm font-medium text-gray-300 mb-1">URL do Link Promocional</label>
+                                        <input 
+                                            type="text" 
+                                            id="promoLinkUrl"
+                                            value={settings.dashboard.promoLinkUrl} 
+                                            onChange={e => handleInputChange(e, 'dashboard', 'promoLinkUrl')}
+                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"
+                                            placeholder="/upsell ou https://externo.com"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
                                 <h2 className="text-2xl font-bold mb-4">Seção "Aulas Gratuitas"</h2>
                                 <div className="space-y-4">
                                     <div>
@@ -392,9 +418,40 @@ const AdminPage = () => {
                                     )}
 
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    </div>
+                                    
+                                    <div className="border-t border-gray-700 pt-4 mt-4">
+                                        <div className="flex items-center gap-4">
+                                            <input
+                                                type="checkbox"
+                                                id="installmentsEnabled"
+                                                name="installmentsEnabled"
+                                                checked={settings.upsellPage.installmentsEnabled}
+                                                onChange={e => handleInputChange(e, 'upsellPage', 'installmentsEnabled')}
+                                                className="h-4 w-4 text-brand bg-gray-700 border-gray-600 rounded focus:ring-brand"
+                                            />
+                                            <label htmlFor="installmentsEnabled" className="block text-sm font-medium text-gray-300">Habilitar Parcelamento</label>
+                                        </div>
+                                    </div>
+
+                                    {settings.upsellPage.installmentsEnabled && (
+                                        <div className="grid md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Número de Parcelas</label>
+                                                <input type="number" name="installmentsNumber" value={settings.upsellPage.installmentsNumber} onChange={e => handleInputChange(e, 'upsellPage', 'installmentsNumber')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Valor da Parcela (Ex: R$19,70)</label>
+                                                <input type="text" name="installmentsPrice" value={settings.upsellPage.installmentsPrice} onChange={e => handleInputChange(e, 'upsellPage', 'installmentsPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Link do Botão de Compra</label><input type="url" value={settings.upsellPage.ctaLink} onChange={(e) => handleInputChange(e, 'upsellPage', 'ctaLink')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" placeholder="https://exemplo.com/checkout"/></div>
-                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
-                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                 </div>
                             </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">URL da Imagem:</label><input type="text" value={testimonial.image} onChange={e => handleTestimonialChange(e, index, 'image')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>

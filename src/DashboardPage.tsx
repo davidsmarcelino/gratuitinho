@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from './context.tsx';
@@ -187,18 +186,6 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
     );
 };
 
-const AssessmentPrompt: React.FC<{ onStart: () => void }> = ({ onStart }) => {
-    return (
-        <div className="text-center flex flex-col items-center justify-center h-[60vh]">
-            <h2 className="text-3xl font-heading mb-4">Bem-vinda à sua área de treinos!</h2>
-            <p className="text-lg text-gray-400 mb-8 max-w-xl">Para começar e personalizar sua experiência, precisamos de algumas informações. Vamos fazer uma autoavaliação rápida?</p>
-            <CTAButton onClick={onStart} className="animate-pulse-orange max-w-sm">
-                Fazer minha autoavaliação
-            </CTAButton>
-        </div>
-    );
-};
-
 const AccessTimerInfo: React.FC<{ registrationDate: string; freeAccessDays: number }> = ({ registrationDate, freeAccessDays }) => {
     if (freeAccessDays <= 0) return null; // Don't show if access is permanent
 
@@ -271,6 +258,8 @@ const DashboardPage = () => {
     useEffect(() => {
         if (!state.user) {
             navigate('/');
+        } else if (!state.user.assessment) {
+            setAssessmentModalOpen(true);
         }
     }, [state.user, navigate]);
 
@@ -282,10 +271,11 @@ const DashboardPage = () => {
         );
     }
 
-    const { user } = state;
+    const { user, settings } = state;
+    const { promoLinkText, promoLinkUrl } = settings.dashboard || { promoLinkText: '', promoLinkUrl: ''};
 
-    const freeLessons = useMemo(() => state.settings.lessons.filter(l => !l.isVip), [state.settings.lessons]);
-    const vipLessons = useMemo(() => state.settings.lessons.filter(l => l.isVip), [state.settings.lessons]);
+    const freeLessons = useMemo(() => settings.lessons.filter(l => !l.isVip), [settings.lessons]);
+    const vipLessons = useMemo(() => settings.lessons.filter(l => l.isVip), [settings.lessons]);
 
     const handleLessonClick = (lesson: Lesson) => {
         const isCompleted = user.progress.includes(lesson.id);
@@ -302,6 +292,15 @@ const DashboardPage = () => {
             } else {
                 alert('Conclua a aula anterior para desbloquear este conteúdo.');
             }
+        }
+    };
+    
+    const handlePromoLinkClick = () => {
+        if (!promoLinkUrl) return;
+        if (promoLinkUrl.startsWith('http')) {
+            window.open(promoLinkUrl, '_blank', 'noopener,noreferrer');
+        } else {
+            navigate(promoLinkUrl);
         }
     };
 
@@ -326,10 +325,10 @@ const DashboardPage = () => {
             <h1 className="text-xl md:text-2xl font-bold font-heading text-white">Olá, <span className="text-brand">{user.name.split(' ')[0]}</span>!</h1>
             <div className="flex-grow flex justify-center">
                  <button 
-                    onClick={() => navigate('/upsell')}
+                    onClick={handlePromoLinkClick}
                     className="text-brand-light font-bold animate-pulse-orange rounded-full px-4 py-2 text-sm hover:text-brand transition-colors"
                 >
-                    Garanta com desconto consultoria VIP
+                    {promoLinkText}
                 </button>
             </div>
             <div className="flex items-center gap-4">
@@ -340,7 +339,7 @@ const DashboardPage = () => {
     );
 
     const WelcomeBanner = () => {
-        if (!nextLesson) {
+        if (user.assessment && !nextLesson) {
              return (
                  <div className="bg-gradient-to-r from-brand to-brand-dark rounded-lg p-6 mb-8 text-center text-white shadow-lg">
                     <h2 className="text-2xl font-bold font-heading mb-2">Parabéns!</h2>
@@ -349,17 +348,21 @@ const DashboardPage = () => {
                  </div>
              );
         }
+        
+        const lessonToShow = nextLesson || freeLessons[0];
+        if (!lessonToShow) return null;
+
         return (
-            <div className="relative rounded-lg overflow-hidden mb-8 group cursor-pointer shadow-2xl shadow-brand/10" onClick={() => handleLessonClick(nextLesson)}>
-                <img src={nextLesson.thumbnail} alt={nextLesson.title} className="w-full h-auto md:h-80 object-cover" />
+            <div className="relative rounded-lg overflow-hidden mb-8 group cursor-pointer shadow-2xl shadow-brand/10" onClick={() => handleLessonClick(lessonToShow)}>
+                <img src={lessonToShow.thumbnail} alt={lessonToShow.title} className="w-full h-auto md:h-80 object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/70 to-transparent flex flex-col justify-end">
                     <div className="p-6 md:p-8">
-                         <p className="text-brand font-bold uppercase text-sm">Sua Próxima Aula</p>
-                         <h2 className="text-2xl md:text-4xl font-bold font-heading my-2 text-white">{nextLesson.title}</h2>
-                         <p className="text-gray-200 mb-4 hidden md:block max-w-2xl">{nextLesson.description}</p>
+                         <p className="text-brand font-bold uppercase text-sm">{user.assessment ? 'Sua Próxima Aula' : 'Sua Primeira Aula'}</p>
+                         <h2 className="text-2xl md:text-4xl font-bold font-heading my-2 text-white">{lessonToShow.title}</h2>
+                         <p className="text-gray-200 mb-4 hidden md:block max-w-2xl">{lessonToShow.description}</p>
                          <div className="flex items-center gap-3 text-white font-bold bg-brand/30 backdrop-blur-sm rounded-full p-2 pl-4 w-fit group-hover:bg-brand/50 transition-colors">
                             <PlayIcon className="w-8 h-8 text-white" />
-                            <span>Assistir Agora</span>
+                            <span>{user.assessment ? 'Assistir Agora' : 'Começar Agora'}</span>
                          </div>
                     </div>
                 </div>
@@ -395,46 +398,44 @@ const DashboardPage = () => {
             <DashboardHeader />
             <main className="container mx-auto p-4 md:p-8">
                 
-                { !user.assessment ? (
-                    <AssessmentPrompt onStart={() => setAssessmentModalOpen(true)} />
-                ) : (
+                <WelcomeBanner />
+                
+                {user.assessment && (
                     <>
-                        <WelcomeBanner />
-                        <AccessTimerInfo registrationDate={user.registrationDate} freeAccessDays={state.settings.freeAccessDays} />
-                        
+                        <AccessTimerInfo registrationDate={user.registrationDate} freeAccessDays={settings.freeAccessDays} />
                         <ProgressBar 
                             value={user.progress.length}
                             max={freeLessons.length}
                             label="Progresso no Módulo Gratuito"
                         />
-                        <div className="my-8">
-                            <Carousel title="Módulo Gratuito">
-                                {freeLessons.map(lesson => (
-                                    <LessonCard
-                                        key={lesson.id}
-                                        lesson={lesson}
-                                        isLocked={nextLesson ? lesson.id > nextLesson.id : false}
-                                        isCompleted={user.progress.includes(lesson.id)}
-                                        onClick={() => handleLessonClick(lesson)}
-                                    />
-                                ))}
-                            </Carousel>
-                        </div>
-
-                        <Carousel title="Programa VIP">
-                            {vipLessons.map(lesson => (
-                                <LessonCard
-                                    key={lesson.id}
-                                    lesson={lesson}
-                                    isLocked={true}
-                                    isCompleted={false}
-                                    onClick={() => handleLessonClick(lesson)}
-                                />
-                            ))}
-                        </Carousel>
                     </>
                 )}
+                
+                <div className="my-8">
+                    <Carousel title="Módulo Gratuito">
+                        {freeLessons.map(lesson => (
+                            <LessonCard
+                                key={lesson.id}
+                                lesson={lesson}
+                                isLocked={user.assessment ? (nextLesson ? lesson.id > nextLesson.id : false) : true}
+                                isCompleted={user.progress.includes(lesson.id)}
+                                onClick={() => user.assessment ? handleLessonClick(lesson) : setAssessmentModalOpen(true)}
+                            />
+                        ))}
+                    </Carousel>
+                </div>
 
+                <Carousel title="Programa VIP">
+                    {vipLessons.map(lesson => (
+                        <LessonCard
+                            key={lesson.id}
+                            lesson={lesson}
+                            isLocked={true}
+                            isCompleted={false}
+                            onClick={() => user.assessment ? handleLessonClick(lesson) : setAssessmentModalOpen(true)}
+                        />
+                    ))}
+                </Carousel>
             </main>
 
             <LessonPlayerModal />
@@ -444,7 +445,7 @@ const DashboardPage = () => {
                 onClose={() => setIsUpsellModalOpen(false)}
             />
             
-            <Modal isOpen={isAssessmentModalOpen && !user.assessment} onClose={() => setAssessmentModalOpen(false)} size="2xl">
+            <Modal isOpen={isAssessmentModalOpen && !user.assessment} size="2xl">
                 <AssessmentForm onComplete={() => setAssessmentModalOpen(false)} />
             </Modal>
         </div>

@@ -53,7 +53,9 @@ const UpsellPage = () => {
                 <div className="mb-8 bg-dark-900/50 border border-dark-700 rounded-lg py-6">
                     <p className="text-gray-400 text-xl">De <span className="line-through">{upsellPage.fullPrice}</span> por apenas:</p>
                     <p className="text-6xl font-bold text-brand my-2">{upsellPage.promoPrice}</p>
-                    <p className="text-gray-300">ou 12x de R$19,70</p>
+                    {upsellPage.installmentsEnabled && upsellPage.installmentsNumber > 0 && upsellPage.installmentsPrice && (
+                        <p className="text-gray-300">ou {upsellPage.installmentsNumber}x de {upsellPage.installmentsPrice}</p>
+                    )}
                 </div>
                 <div className="mb-8">
                     <h3 className="text-2xl font-heading text-white mb-4">ESTA OFERTA EXPIRA EM:</h3>
