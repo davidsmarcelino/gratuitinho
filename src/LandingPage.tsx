@@ -154,17 +154,18 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            const { data: existingUser, error: fetchError } = await supabase
+            const response = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
 
-            if (fetchError) {
-                throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
+            if (response.error) {
+                throw new Error(`Erro ao verificar usuário: ${response.error.message}`);
             }
 
-            if (existingUser) {
+            if (response.data) {
+                const existingUser = response.data;
                 // User exists, log them in
                 // Manually construct the user object to avoid deep type instantiation errors.
                 const typedUser: User = {
@@ -179,7 +180,6 @@ const LandingPage = () => {
                 navigate('/dashboard');
             } else {
                 // User does not exist, create new one.
-                // We create a plain object for insertion to avoid deep type instantiation errors with the Supabase client.
                 const userToInsert = {
                     name: formData.name,
                     email: formData.email,
@@ -189,15 +189,15 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const insertResult = await supabase
+                const { error: insertError } = await supabase
                     .from('users')
-                    .insert(userToInsert);
+                    .insert([userToInsert] as any);
 
-                if (insertResult.error) {
-                    if (insertResult.error.code === '23505') { // Handle unique constraint violation
+                if (insertError) {
+                    if (insertError.code === '23505') { // Handle unique constraint violation
                         throw new Error('Este e-mail já está cadastrado.');
                     }
-                    throw new Error(`Erro ao criar usuário: ${insertResult.error.message}`);
+                    throw new Error(`Erro ao criar usuário: ${insertError.message}`);
                 }
                 
                 // If insert is successful, create the full User object for the state

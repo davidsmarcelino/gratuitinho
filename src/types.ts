@@ -76,12 +76,16 @@ export type AdminSettings = {
   lessons: Lesson[];
   testimonials: Testimonial[];
   upsellPage: {
-    videoUrl: string;
-    fullPrice: string;
-    promoPrice: string;
     title: string;
     subtitle: string;
+    subtitleNoMedia?: string;
     features: string[];
+    mediaType: 'video' | 'image' | 'none';
+    videoUrl: string;
+    imageUrl: string;
+    fullPrice: string;
+    promoPrice: string;
+    ctaLink: string;
   };
   freeAccessDays: number;
   offerCountdownHours: number;

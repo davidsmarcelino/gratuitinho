@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from './context.tsx';
@@ -133,6 +132,22 @@ const AdminPage = () => {
             })));
         }
     };
+    
+    const handleHeroImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
+                ...prev, landingPage: { ...prev.landingPage, heroImage: image }
+            })));
+        }
+    };
+
+    const handleUpsellImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
+                ...prev, upsellPage: { ...prev.upsellPage, imageUrl: image }
+            })));
+        }
+    };
 
     const handleBeforeAfterChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const newBeforeAfter = [...settings.landingPage.beforeAndAfter];
@@ -253,8 +268,14 @@ const AdminPage = () => {
                                         <textarea value={settings.landingPage.heroDescription} onChange={(e) => handleInputChange(e, 'landingPage', 'heroDescription')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem Principal</label>
-                                        <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Imagem Principal (Hero)</label>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <img src={settings.landingPage.heroImage} alt="Hero preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>
+                                            <label htmlFor="hero-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2">
+                                                <PencilIcon className="w-4 h-4" />Trocar imagem...
+                                            </label>
+                                            <input id="hero-image-upload" name="hero-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleHeroImageUpload} />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +345,43 @@ const AdminPage = () => {
                             </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2><div className="space-y-4">{settings.landingPage.beforeAndAfter.map((item, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveBeforeAfter(index)} title="Remover" className="absolute top-2 right-2 text-red-500 hover:text-red-400"><TrashIcon className="w-5 h-5"/></button><div className="grid md:grid-cols-3 gap-4 items-end"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome da Aluna</label><input type="text" value={item.name} onChange={(e) => handleBeforeAfterChange(e, index)} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"/></div><div><label htmlFor={`before-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Antes"</label><input id={`before-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'before')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div><div><label htmlFor={`after-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Depois"</label><input id={`after-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'after')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div></div></div>))}</div><div className="mt-4"><button onClick={handleAddBeforeAfter} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Par Antes/Depois</button></div></div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Seção "Conheça o Treinador"</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome do Treinador</label><input type="text" value={settings.coach.name} onChange={(e) => handleInputChange(e, 'coach', 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Bio do Treinador</label><textarea value={settings.coach.bio} onChange={(e) => handleInputChange(e, 'coach', 'bio')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto do Treinador</label><div className="flex items-center gap-4 mt-2"><img src={settings.coach.image} alt="Coach preview" className="w-24 h-24 rounded-lg object-cover bg-dark-700"/><label htmlFor="coach-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2"><PencilIcon className="w-4 h-4" />Trocar imagem...</label><input id="coach-image-upload" name="coach-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleCoachImageUpload} /></div></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Certificações (uma por linha)</label><textarea value={settings.coach.certifications.join('\n')} onChange={handleCoachCertificationsChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div></div></div>
-                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Página de Upsell</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>
+                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Página de Upsell</h2>
+                                <div className="space-y-4">
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo (com vídeo/imagem)</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo (sem mídia)</label><textarea value={settings.upsellPage.subtitleNoMedia || ''} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitleNoMedia')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div>
+                                    
+                                    <div className="border-t border-gray-700 pt-4 mt-4">
+                                        <label className="block text-sm font-medium text-gray-300 mb-2">Tipo de Mídia</label>
+                                        <div className="flex items-center gap-6">
+                                            <label className="flex items-center gap-2"><input type="radio" name="upsellMediaType" value="video" checked={settings.upsellPage.mediaType === 'video'} onChange={() => setSettings(prev => ({ ...prev, upsellPage: { ...prev.upsellPage, mediaType: 'video' } }))} className="text-brand focus:ring-brand"/> Vídeo</label>
+                                            <label className="flex items-center gap-2"><input type="radio" name="upsellMediaType" value="image" checked={settings.upsellPage.mediaType === 'image'} onChange={() => setSettings(prev => ({ ...prev, upsellPage: { ...prev.upsellPage, mediaType: 'image' } }))} className="text-brand focus:ring-brand"/> Imagem</label>
+                                            <label className="flex items-center gap-2"><input type="radio" name="upsellMediaType" value="none" checked={settings.upsellPage.mediaType === 'none'} onChange={() => setSettings(prev => ({ ...prev, upsellPage: { ...prev.upsellPage, mediaType: 'none' } }))} className="text-brand focus:ring-brand"/> Nenhum</label>
+                                        </div>
+                                    </div>
+
+                                    {settings.upsellPage.mediaType === 'video' && (
+                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    )}
+
+                                    {settings.upsellPage.mediaType === 'image' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Imagem da Oferta</label>
+                                            <div className="flex items-center gap-4 mt-2">
+                                                <img src={settings.upsellPage.imageUrl} alt="Upsell preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>
+                                                <label htmlFor="upsell-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2"><PencilIcon className="w-4 h-4" />Trocar imagem...</label>
+                                                <input id="upsell-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleUpsellImageUpload} />
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Link do Botão de Compra</label><input type="url" value={settings.upsellPage.ctaLink} onChange={(e) => handleInputChange(e, 'upsellPage', 'ctaLink')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" placeholder="https://exemplo.com/checkout"/></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                </div>
+                            </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">URL da Imagem:</label><input type="text" value={testimonial.image} onChange={e => handleTestimonialChange(e, index, 'image')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>
                         </div>
                     )}

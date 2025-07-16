@@ -104,11 +104,9 @@ const INITIAL_SETTINGS: AdminSettings = {
   lessons: DEFAULT_LESSONS,
   testimonials: DEFAULT_TESTIMONIALS,
   upsellPage: {
-    videoUrl: 'https://www.youtube.com/embed/GFQ3_h3sHCY',
-    fullPrice: 'R$497,00',
-    promoPrice: 'R$197,00',
     title: 'SEU PRÓXIMO PASSO PARA A TRANSFORMAÇÃO COMPLETA!',
     subtitle: 'Você provou que é capaz. Agora, vamos acelerar seus resultados com minha consultoria premium.',
+    subtitleNoMedia: 'Você provou que é capaz. Dê o próximo passo e acelere seus resultados com minha consultoria premium.',
     features: [
         "Acesso vitalício a todas as aulas VIP",
         "Treinos novos toda semana",
@@ -116,6 +114,12 @@ const INITIAL_SETTINGS: AdminSettings = {
         "Grupo exclusivo de alunas no WhatsApp",
         "Suporte direto comigo para tirar dúvidas"
     ],
+    mediaType: 'video',
+    videoUrl: 'https://www.youtube.com/embed/GFQ3_h3sHCY',
+    imageUrl: 'https://i.imgur.com/L8aD5fG.png',
+    fullPrice: 'R$497,00',
+    promoPrice: 'R$197,00',
+    ctaLink: '#',
   },
   freeAccessDays: 7,
   offerCountdownHours: 24,
@@ -282,7 +286,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         
         // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const upsertResult = await supabase.from('users').upsert(userPayload, { onConflict: 'email' });
+        const upsertResult = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
 
         if (upsertResult.error) {
             console.error('Error saving user data to Supabase:', upsertResult.error);
