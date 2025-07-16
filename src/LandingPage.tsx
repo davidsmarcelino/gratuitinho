@@ -153,21 +153,20 @@ const LandingPage = () => {
         setError(null);
 
         try {
-            // Check for existing user first.
-            const response = await supabase
+            // Check for existing user first by destructuring the response.
+            // This prevents a "Type instantiation is excessively deep" error with TypeScript.
+            const { data: existingUser, error } = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
 
-            if (response.error) {
-                throw new Error(`Erro ao verificar usuário: ${response.error.message}`);
+            if (error) {
+                throw new Error(`Erro ao verificar usuário: ${error.message}`);
             }
 
-            if (response.data) {
-                const existingUser = response.data;
+            if (existingUser) {
                 // User exists, log them in
-                // Manually construct the user object to avoid deep type instantiation errors.
                 const typedUser: User = {
                     name: existingUser.name,
                     email: existingUser.email,

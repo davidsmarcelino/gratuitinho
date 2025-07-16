@@ -1,4 +1,3 @@
-import React from 'react';
 import { useApp } from './context.tsx';
 import { CountdownTimer, CTAButton, CheckIcon } from './components.tsx';
 
