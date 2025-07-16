@@ -60,7 +60,8 @@ const AdminPage = () => {
     
     const handleLessonChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>, index: number, field: keyof Lesson) => {
         const newLessons = [...settings.lessons];
-        (newLessons[index] as any)[field] = e.target.type === 'checkbox' ? (e.target as HTMLInputElement).checked : e.target.value;
+        const target = e.target as HTMLInputElement;
+        (newLessons[index] as any)[field] = target.type === 'checkbox' ? target.checked : target.value;
         setSettings(prev => ({...prev, lessons: newLessons}));
     };
     
