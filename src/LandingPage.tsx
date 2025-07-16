@@ -193,7 +193,7 @@ const LandingPage = () => {
 
                 const insertResponse = await supabase
                     .from('users')
-                    .insert([userToInsert]);
+                    .insert([userToInsert] as any);
 
                 if (insertResponse.error) {
                     if (insertResponse.error.code === '23505') { // Handle unique constraint violation
@@ -283,7 +283,7 @@ const LandingPage = () => {
                             {freeClassesSection.classes.map((lesson, index) => (
                                 <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 text-left shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                                     <div className="text-brand w-16 h-16 flex items-center justify-center rounded-2xl bg-brand/10 mb-6 text-brand-dark">
-                                        {React.createElement(icons[index], {className: "w-10 h-10"})}
+                                        {React.createElement(icons[index % icons.length], {className: "w-10 h-10"})}
                                     </div>
                                     <h3 className="text-xl font-bold mb-3">{lesson.title}</h3>
                                     <p className="text-gray-600 mb-5 min-h-[72px]">{lesson.description}</p>
