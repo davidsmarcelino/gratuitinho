@@ -264,7 +264,7 @@ const LandingPage = () => {
                                 <img src={heroImage} alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
                                 <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-dark-900 p-3 rounded-lg shadow-lg">
                                     <p className="font-bold">Resultados Reais</p>
-                                    <p className="text-sm">Transformação em 90 dias</p>
+                                    <p className="text-sm">Transformação em poucos dias</p>
                                 </div>
                             </div>
                         </div>
