@@ -1,8 +1,10 @@
 
+
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from './context.tsx';
-import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
+import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage, FreeClassInfo } from './types.ts';
 import { CTAButton, CheckCircleIcon, exportToCSV, MiniProgressBar, TrendingUpIcon, UsersIcon, PencilIcon, TrashIcon, PlusIcon } from './components.tsx';
 
 type AdminTab = 'metrics' | 'users' | 'lessons' | 'content' | 'settings';
@@ -165,6 +167,12 @@ const AdminPage = () => {
             setSettings(prev => ({...prev, landingPage: {...prev.landingPage, beforeAndAfter: newBeforeAfter}}));
         }
     };
+
+    const handleFreeClassFeatureChange = (e: React.ChangeEvent<HTMLTextAreaElement>, classIndex: number) => {
+        const newClasses = [...settings.freeClassesSection.classes];
+        newClasses[classIndex].features = e.target.value.split('\n');
+        setSettings(prev => ({...prev, freeClassesSection: {...prev.freeClassesSection, classes: newClasses}}));
+    }
     
     const assessmentLabels = {
         goal: { emagrecer: 'Emagrecer', definir: 'Definir', ganhar_massa: 'Ganhar Massa' },
@@ -227,7 +235,95 @@ const AdminPage = () => {
                     )}
                     {activeTab === 'content' && (
                         <div className="space-y-8">
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Landing Page</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.landingPage.title} onChange={(e) => handleInputChange(e, 'landingPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.landingPage.subtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div></div></div>
+                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Seção Principal (Hero)</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título (Destaque)</label>
+                                        <input type="text" value={settings.landingPage.heroTitleHighlight} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitleHighlight')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título (Continuação)</label>
+                                        <input type="text" value={settings.landingPage.heroTitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label>
+                                        <input type="text" value={settings.landingPage.heroSubtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroSubtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Descrição</label>
+                                        <textarea value={settings.landingPage.heroDescription} onChange={(e) => handleInputChange(e, 'landingPage', 'heroDescription')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem Principal</label>
+                                        <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Seção "Aulas Gratuitas"</h2>
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título da Seção</label>
+                                        <input 
+                                            type="text" 
+                                            value={settings.freeClassesSection.title} 
+                                            onChange={(e) => setSettings(s => ({...s, freeClassesSection: {...s.freeClassesSection, title: e.target.value}}))}
+                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo da Seção</label>
+                                        <textarea 
+                                            value={settings.freeClassesSection.subtitle} 
+                                            onChange={(e) => setSettings(s => ({...s, freeClassesSection: {...s.freeClassesSection, subtitle: e.target.value}}))}
+                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"
+                                        ></textarea>
+                                    </div>
+                                    <div className="space-y-6 pt-4">
+                                        {settings.freeClassesSection.classes.map((cls, index) => (
+                                            <div key={index} className="p-4 border border-gray-700 rounded-md bg-dark-800">
+                                                <h3 className="font-bold text-lg mb-2 text-brand">Card da Aula {index + 1}</h3>
+                                                <div className="grid md:grid-cols-2 gap-4">
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título do Card</label>
+                                                        <input 
+                                                            type="text" 
+                                                            value={cls.title}
+                                                            onChange={e => {
+                                                                const newClasses = [...settings.freeClassesSection.classes];
+                                                                newClasses[index].title = e.target.value;
+                                                                setSettings(prev => ({...prev, freeClassesSection: {...prev.freeClassesSection, classes: newClasses}}));
+                                                            }}
+                                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"
+                                                        />
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                        <label className="block text-sm font-medium text-gray-300 mb-1">Descrição do Card</label>
+                                                         <textarea 
+                                                            value={cls.description}
+                                                            onChange={e => {
+                                                                const newClasses = [...settings.freeClassesSection.classes];
+                                                                newClasses[index].description = e.target.value;
+                                                                setSettings(prev => ({...prev, freeClassesSection: {...prev.freeClassesSection, classes: newClasses}}));
+                                                            }}
+                                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20"
+                                                        ></textarea>
+                                                    </div>
+                                                    <div className="md:col-span-2">
+                                                         <label className="block text-sm font-medium text-gray-300 mb-1">Benefícios (um por linha)</label>
+                                                         <textarea 
+                                                            value={cls.features.join('\n')}
+                                                            onChange={e => handleFreeClassFeatureChange(e, index)}
+                                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20"
+                                                        ></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2><div className="space-y-4">{settings.landingPage.beforeAndAfter.map((item, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveBeforeAfter(index)} title="Remover" className="absolute top-2 right-2 text-red-500 hover:text-red-400"><TrashIcon className="w-5 h-5"/></button><div className="grid md:grid-cols-3 gap-4 items-end"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome da Aluna</label><input type="text" value={item.name} onChange={(e) => handleBeforeAfterChange(e, index)} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"/></div><div><label htmlFor={`before-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Antes"</label><input id={`before-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'before')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div><div><label htmlFor={`after-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Depois"</label><input id={`after-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'after')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div></div></div>))}</div><div className="mt-4"><button onClick={handleAddBeforeAfter} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Par Antes/Depois</button></div></div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Seção "Conheça o Treinador"</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome do Treinador</label><input type="text" value={settings.coach.name} onChange={(e) => handleInputChange(e, 'coach', 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Bio do Treinador</label><textarea value={settings.coach.bio} onChange={(e) => handleInputChange(e, 'coach', 'bio')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto do Treinador</label><div className="flex items-center gap-4 mt-2"><img src={settings.coach.image} alt="Coach preview" className="w-24 h-24 rounded-lg object-cover bg-dark-700"/><label htmlFor="coach-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2"><PencilIcon className="w-4 h-4" />Trocar imagem...</label><input id="coach-image-upload" name="coach-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleCoachImageUpload} /></div></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Certificações (uma por linha)</label><textarea value={settings.coach.certifications.join('\n')} onChange={handleCoachCertificationsChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div></div></div>
                              <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Página de Upsell</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>

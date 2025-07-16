@@ -116,27 +116,6 @@ const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick })
     );
 };
 
-const lessons = [
-    { 
-        icon: MetabolismIcon, 
-        title: "Aula 1: Metabolismo Acelerado", 
-        description: "Aprenda a acelerar seu metabolismo natural e queimar gordura 24 horas por dia.",
-        features: ["Técnicas comprovadas cientificamente", "Queima de gordura otimizada"]
-    },
-    { 
-        icon: NutritionIcon, 
-        title: "Aula 2: Alimentação Estratégica", 
-        description: "Descubra como comer mais e ainda assim perder peso com nossa estratégia nutricional.",
-        features: ["Sem contar calorias", "Receitas práticas"]
-    },
-    { 
-        icon: MindsetIcon, 
-        title: "Aula 3: Mindset Vencedor", 
-        description: "Transforme sua mente para manter os resultados para sempre e eliminar a autosabotagem.",
-        features: ["Técnicas de motivação", "Hábitos duradouros"]
-    },
-];
-
 const benefits = [
     { icon: EnergyIcon, title: "Mais Disposição", description: "Sinta-se energizada o dia todo com nosso método de ativação metabólica." },
     { icon: WaistlineIcon, title: "Menos Barriga", description: "Reduza medidas e elimine a gordura localizada de forma natural." },
@@ -156,6 +135,11 @@ const LandingPage = () => {
     const [videoToPlay, setVideoToPlay] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { heroTitleHighlight, heroTitle, heroSubtitle, heroDescription, heroImage } = state.settings.landingPage;
+    const { freeClassesSection } = state.settings;
+    const icons = [MetabolismIcon, NutritionIcon, MindsetIcon];
+
 
     const handleOpenRegModal = () => {
         setError(null);
@@ -209,15 +193,15 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const { error: insertError } = await supabase
+                const insertResult = await supabase
                     .from('users')
                     .insert([userToInsert] as any);
 
-                if (insertError) {
-                    if (insertError.code === '23505') { // Handle unique constraint violation
+                if (insertResult.error) {
+                    if (insertResult.error.code === '23505') { // Handle unique constraint violation
                         throw new Error('Este e-mail já está cadastrado.');
                     }
-                    throw new Error(`Erro ao criar usuário: ${insertError.message}`);
+                    throw new Error(`Erro ao criar usuário: ${insertResult.error.message}`);
                 }
                 
                 // If insert is successful, create the full User object for the state
@@ -265,11 +249,11 @@ const LandingPage = () => {
                     <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center relative z-10">
                         <div className="text-center md:text-left">
                             <h1 className="text-5xl md:text-7xl font-black font-heading uppercase leading-tight tracking-tighter">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-brand">Perca 15kg</span> em 90 Dias
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-brand">{heroTitleHighlight}</span> {heroTitle}
                             </h1>
-                            <h2 className="text-2xl md:text-3xl font-bold mt-2 text-gray-200">Sem Dietas Restritivas</h2>
+                            <h2 className="text-2xl md:text-3xl font-bold mt-2 text-gray-200">{heroSubtitle}</h2>
                             <p className="mt-6 text-lg text-gray-300 max-w-lg mx-auto md:mx-0">
-                                Descubra o método científico que já transformou mais de 10.000 mulheres.
+                                {heroDescription}
                             </p>
                             <div className="mt-8 bg-dark-800/50 border border-dark-700 p-4 rounded-lg max-w-sm mx-auto md:mx-0 backdrop-blur-sm">
                                 <p className="font-bold uppercase text-sm text-gray-300">Esta Oferta Termina em:</p>
@@ -283,7 +267,7 @@ const LandingPage = () => {
                         </div>
                         <div className="hidden md:block">
                             <div className="relative">
-                                <img src="https://i.imgur.com/gWahM2y.png" alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
+                                <img src={heroImage} alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
                                 <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-dark-900 p-3 rounded-lg shadow-lg">
                                     <p className="font-bold">Resultados Reais</p>
                                     <p className="text-sm">Transformação em 90 dias</p>
@@ -296,13 +280,13 @@ const LandingPage = () => {
                 {/* Lessons Section */}
                 <section id="aulas" className="py-24 bg-gray-100 text-dark-800">
                     <div className="container mx-auto px-4 text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4">3 Aulas Gratuitas Que Vão Mudar Sua Vida</h2>
-                        <p className="text-lg text-gray-600 mb-16 max-w-2xl mx-auto">Acesse gratuitamente nosso conteúdo exclusivo e comece sua transformação hoje mesmo.</p>
+                        <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4">{freeClassesSection.title}</h2>
+                        <p className="text-lg text-gray-600 mb-16 max-w-2xl mx-auto">{freeClassesSection.subtitle}</p>
                         <div className="grid md:grid-cols-3 gap-8">
-                            {lessons.map((lesson, index) => (
+                            {freeClassesSection.classes.map((lesson, index) => (
                                 <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 text-left shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                                     <div className="text-brand w-16 h-16 flex items-center justify-center rounded-2xl bg-brand/10 mb-6 text-brand-dark">
-                                        {React.createElement(lesson.icon, {className: "w-10 h-10"})}
+                                        {React.createElement(icons[index], {className: "w-10 h-10"})}
                                     </div>
                                     <h3 className="text-xl font-bold mb-3">{lesson.title}</h3>
                                     <p className="text-gray-600 mb-5 min-h-[72px]">{lesson.description}</p>

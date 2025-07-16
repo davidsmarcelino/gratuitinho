@@ -1,6 +1,7 @@
 
 
 
+
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User } from './types.ts';
@@ -194,7 +195,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             throw new Error(`Supabase fetch error: ${error.message}`);
         }
 
-        const users: User[] = usersFromSupabase || [];
+        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => ({
+            name: dbUser.name,
+            email: dbUser.email,
+            whatsapp: dbUser.whatsapp,
+            registrationDate: dbUser.registrationDate,
+            progress: dbUser.progress || [],
+            assessment: dbUser.assessment || null,
+        }));
         
         // Load logged-in user from session storage
         const sessionUserEmail = sessionStorage.getItem('gratuitinho_user_email');
@@ -271,7 +279,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
-  }, []);
+    sessionStorage.removeItem('gratuitinho_user_email');
+  }, [dispatch]);
 
   if (areCredentialsMissing) {
       return <MissingCredentialsWarning />;

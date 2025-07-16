@@ -71,10 +71,34 @@ const DEFAULT_COACH: Coach = {
 
 const INITIAL_SETTINGS: AdminSettings = {
   landingPage: {
-    title: 'DESTRAVE A QUEIMA DE GORDURA E SEQUE EM TEMPO RECORDE',
-    subtitle: 'Acesse 3 aulas gratuitas e descubra o método para transformar seu corpo de uma vez por todas, mesmo com pouco tempo para treinar.',
+    heroTitleHighlight: 'Perca 15kg',
+    heroTitle: 'em 90 Dias',
+    heroSubtitle: 'Sem Dietas Restritivas',
+    heroDescription: 'Descubra o método científico que já transformou mais de 10.000 mulheres.',
+    heroImage: 'https://i.imgur.com/gWahM2y.png',
     vslEnabled: false,
     beforeAndAfter: [],
+  },
+  freeClassesSection: {
+    title: '3 Aulas Gratuitas Que Vão Mudar Sua Vida',
+    subtitle: 'Acesse gratuitamente nosso conteúdo exclusivo e comece sua transformação hoje mesmo.',
+    classes: [
+      { 
+        title: "Aula 1: Metabolismo Acelerado", 
+        description: "Aprenda a acelerar seu metabolismo natural e queimar gordura 24 horas por dia.",
+        features: ["Técnicas comprovadas cientificamente", "Queima de gordura otimizada"]
+      },
+      { 
+        title: "Aula 2: Alimentação Estratégica", 
+        description: "Descubra como comer mais e ainda assim perder peso com nossa estratégia nutricional.",
+        features: ["Sem contar calorias", "Receitas práticas"]
+      },
+      { 
+        title: "Aula 3: Mindset Vencedor", 
+        description: "Transforme sua mente para manter os resultados para sempre e eliminar a autosabotagem.",
+        features: ["Técnicas de motivação", "Hábitos duradouros"]
+      },
+    ]
   },
   coach: DEFAULT_COACH,
   lessons: DEFAULT_LESSONS,
@@ -176,6 +200,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             ...INITIAL_SETTINGS,
             ...storedSettings,
             landingPage: { ...INITIAL_SETTINGS.landingPage, ...storedSettings.landingPage },
+            freeClassesSection: { ...INITIAL_SETTINGS.freeClassesSection, ...storedSettings.freeClassesSection },
             coach: { ...INITIAL_SETTINGS.coach, ...storedSettings.coach },
             upsellPage: { ...INITIAL_SETTINGS.upsellPage, ...storedSettings.upsellPage },
             lessons: storedSettings.lessons || INITIAL_SETTINGS.lessons,
@@ -257,10 +282,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
         
         // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const { error } = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
+        const upsertResult = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
 
-        if (error) {
-            console.error('Error saving user data to Supabase:', error);
+        if (upsertResult.error) {
+            console.error('Error saving user data to Supabase:', upsertResult.error);
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
         } else {
             console.log("User data successfully synced with Supabase.");
@@ -277,6 +302,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
     sessionStorage.removeItem('gratuitinho_user_email');
+    // Do not remove admin auth on user logout
   }, [dispatch]);
 
   if (areCredentialsMissing) {

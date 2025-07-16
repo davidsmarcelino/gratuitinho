@@ -4,7 +4,7 @@ export type User = {
   email: string;
   whatsapp: string;
   registrationDate: string; // Changed from number to string
-  assessment?: AssessmentData;
+  assessment?: AssessmentData | null;
   progress: number[]; // Array of completed lesson IDs
 };
 

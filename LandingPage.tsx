@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -186,7 +187,16 @@ const LandingPage = () => {
 
             if (existingUser) {
                 // User exists, log them in
-                dispatch({ type: 'SET_USER', payload: existingUser as User });
+                // Manually construct the user object to avoid deep type instantiation errors.
+                const typedUser: User = {
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    whatsapp: existingUser.whatsapp,
+                    registrationDate: existingUser.registrationDate,
+                    progress: existingUser.progress || [],
+                    assessment: existingUser.assessment || null,
+                };
+                dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
             } else {
                 // User does not exist, create new one
@@ -216,6 +226,7 @@ const LandingPage = () => {
                 // If insert is successful, create the full User object for the state
                 const newUser: User = {
                     ...newUserPayload,
+                    assessment: null,
                 };
                 dispatch({ type: 'ADD_USER', payload: newUser });
                 dispatch({ type: 'SET_USER', payload: newUser });

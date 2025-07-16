@@ -1,5 +1,3 @@
-
-
 // ========= TYPES =========
 export type User = {
   name: string;
@@ -53,12 +51,26 @@ export type BeforeAndAfterImage = {
     name: string; // student name
 }
 
+export type FreeClassInfo = {
+  title: string;
+  description: string;
+  features: string[];
+};
+
 export type AdminSettings = {
   landingPage: {
-    title: string;
-    subtitle: string;
+    heroTitleHighlight: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    heroDescription: string;
+    heroImage: string;
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
+  };
+   freeClassesSection: {
+    title: string;
+    subtitle: string;
+    classes: FreeClassInfo[];
   };
   coach: Coach;
   lessons: Lesson[];
