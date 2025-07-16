@@ -18,7 +18,7 @@ const AdminLoginPage = () => {
 
         // Credentials check
         if (formData.login === 'aptus' && formData.password === 'nico123') {
-            sessionStorage.setItem('isAdminAuthenticated', 'true');
+            localStorage.setItem('isAdminAuthenticated', 'true');
             navigate('/admin');
         } else {
             setError('Login ou senha incorretos.');

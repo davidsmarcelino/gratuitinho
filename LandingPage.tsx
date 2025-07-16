@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -173,17 +170,17 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            const response = await supabase
+            const userResponse = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
 
-            const { data: existingUser, error: fetchError } = response;
-
-            if (fetchError) {
-                throw new Error(`Erro ao verificar usuário: ${fetchError.message}`);
+            if (userResponse.error) {
+                throw new Error(`Erro ao verificar usuário: ${userResponse.error.message}`);
             }
+            
+            const existingUser = userResponse.data;
 
             if (existingUser) {
                 // User exists, log them in
@@ -212,15 +209,15 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const { error: insertError } = await supabase
+                const insertResponse = await supabase
                     .from('users')
                     .insert([userToInsert] as any);
 
-                if (insertError) {
-                    if (insertError.code === '23505') { // Handle unique constraint violation
+                if (insertResponse.error) {
+                    if (insertResponse.error.code === '23505') { // Handle unique constraint violation
                         throw new Error('Este e-mail já está cadastrado.');
                     }
-                    throw new Error(`Erro ao criar usuário: ${insertError.message}`);
+                    throw new Error(`Erro ao criar usuário: ${insertResponse.error.message}`);
                 }
                 
                 // If insert is successful, create the full User object for the state

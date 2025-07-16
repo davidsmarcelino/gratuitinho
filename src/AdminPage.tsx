@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -52,7 +53,7 @@ const AdminPage = () => {
     };
 
     const handleAdminLogout = () => {
-        sessionStorage.removeItem('isAdminAuthenticated');
+        localStorage.removeItem('isAdminAuthenticated');
         navigate('/admin/login');
     };
 

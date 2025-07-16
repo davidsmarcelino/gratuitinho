@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -192,7 +193,7 @@ const LandingPage = () => {
 
                 const insertResponse = await supabase
                     .from('users')
-                    .insert([userToInsert] as any);
+                    .insert([userToInsert]);
 
                 if (insertResponse.error) {
                     if (insertResponse.error.code === '23505') { // Handle unique constraint violation

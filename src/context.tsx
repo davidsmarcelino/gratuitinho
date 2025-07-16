@@ -1,3 +1,4 @@
+
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User } from './types.ts';
@@ -252,9 +253,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment: dbUser.assessment || null,
         }));
         
-        // Load logged-in user from session storage
-        const sessionUserEmail = sessionStorage.getItem('gratuitinho_user_email');
-        const currentUser = sessionUserEmail ? (users.find(u => u.email === sessionUserEmail) || null) : null;
+        // Load logged-in user from local storage for persistence
+        const storedUserEmail = localStorage.getItem('gratuitinho_user_email');
+        const currentUser = storedUserEmail ? (users.find(u => u.email === storedUserEmail) || null) : null;
 
         dispatch({ type: 'SET_STATE', payload: { user: currentUser, users: users, settings: loadedSettings, appStatus: 'ready', syncStatus: 'idle' } });
       } catch (error) {
@@ -273,18 +274,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   
-  // Effect to save updated user to Supabase and session storage
+  // Effect to save updated user to Supabase and local storage
   const userJson = JSON.stringify(state.user);
   useEffect(() => {
     if (areCredentialsMissing || state.appStatus !== 'ready' || !state.user) {
       if (!state.user) {
-        sessionStorage.removeItem('gratuitinho_user_email');
+        localStorage.removeItem('gratuitinho_user_email');
       }
       return;
     }
     
     const user = state.user;
-    sessionStorage.setItem('gratuitinho_user_email', user.email);
+    localStorage.setItem('gratuitinho_user_email', user.email);
        
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
@@ -298,10 +299,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             progress: user.progress
         };
         
-        const response = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
 
-        if (response.error) {
-            console.error('Error saving user data to Supabase:', response.error);
+        if (error) {
+            console.error('Error saving user data to Supabase:', error);
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
         } else {
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });
@@ -316,7 +317,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
-    sessionStorage.removeItem('gratuitinho_user_email');
+    localStorage.removeItem('gratuitinho_user_email');
     // Do not remove admin auth on user logout
   }, [dispatch]);
 

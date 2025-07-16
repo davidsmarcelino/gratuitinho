@@ -132,18 +132,20 @@ export const exportToCSV = (users: User[], lessons: Lesson[]) => {
 
 
 // ========= REUSABLE UI COMPONENTS =========
-export const Modal: React.FC<{ isOpen: boolean; onClose?: () => void; children: React.ReactNode; size?: 'md' | '2xl' | '3xl' }> = ({ isOpen, onClose, children, size = 'md' }) => {
+export const Modal: React.FC<{ isOpen: boolean; onClose?: () => void; children: React.ReactNode; size?: 'md' | 'lg' | 'xl' | '2xl' | '3xl' }> = ({ isOpen, onClose, children, size = 'md' }) => {
     if (!isOpen) return null;
 
     const sizeClass = {
         'md': 'max-w-md',
+        'lg': 'max-w-lg',
+        'xl': 'max-w-xl',
         '2xl': 'max-w-2xl',
         '3xl': 'max-w-3xl'
     }[size];
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={onClose}>
-            <div className={`bg-dark-900 rounded-lg shadow-xl w-full ${sizeClass} p-6 m-4 relative`} onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto" onClick={onClose}>
+            <div className={`bg-dark-900 rounded-lg shadow-xl w-full ${sizeClass} p-6 my-8 relative`} onClick={e => e.stopPropagation()}>
                 {onClose && <button onClick={onClose} className="absolute top-2 right-4 text-white text-3xl hover:text-gray-300 z-10">&times;</button>}
                 {children}
             </div>

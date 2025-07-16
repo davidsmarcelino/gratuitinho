@@ -38,7 +38,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
 };
 
 const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const isAuthenticated = sessionStorage.getItem('isAdminAuthenticated') === 'true';
+    const isAuthenticated = localStorage.getItem('isAdminAuthenticated') === 'true';
     const location = useLocation();
 
     if (!isAuthenticated) {
