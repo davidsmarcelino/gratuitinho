@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp, supabase } from './context.tsx';
 import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
-import { CTAButton, CheckCircleIcon, exportToCSV, MiniProgressBar, TrendingUpIcon, UsersIcon, PencilIcon, TrashIcon, PlusIcon } from './components.tsx';
+import { CTAButton, CheckCircleIcon, exportToCSV, MiniProgressBar, TrendingUpIcon, UsersIcon, TrashIcon, PlusIcon } from './components.tsx';
 
 type AdminTab = 'metrics' | 'users' | 'lessons' | 'content' | 'settings';
 
@@ -23,7 +23,7 @@ const AdminPage = () => {
         setIsSaving(true);
         const { error } = await supabase
             .from('settings')
-            .upsert([{ id: 1, config: settings }], { onConflict: 'id' });
+            .upsert({ id: 1, config: settings });
 
         if (error) {
             alert(`Erro ao salvar configurações: ${error.message}`);
