@@ -1,9 +1,8 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial, AssessmentData } from './types.ts';
+import { User, Testimonial, Database, AssessmentData } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -170,27 +169,27 @@ const LandingPage = () => {
             const existingUser = userResponse.data;
 
             if (existingUser) {
-                const anyUser: any = existingUser;
-                const assessment = anyUser.assessment_age != null ? {
-                    age: anyUser.assessment_age,
-                    height: anyUser.assessment_height,
-                    weight: anyUser.assessment_weight,
-                    activityLevel: anyUser.assessment_activity_level,
-                    goal: anyUser.assessment_goal,
-                    sleepQuality: anyUser.assessment_sleep_quality,
-                    foodQuality: anyUser.assessment_food_quality,
-                    trainingLocation: anyUser.assessment_training_location,
-                    imc: anyUser.assessment_imc,
-                    idealWeight: anyUser.assessment_ideal_weight,
+                const assessment = existingUser.assessment_age != null ? {
+                    age: existingUser.assessment_age,
+                    height: existingUser.assessment_height,
+                    weight: existingUser.assessment_weight,
+                    activityLevel: existingUser.assessment_activity_level,
+                    goal: existingUser.assessment_goal,
+                    sleepQuality: existingUser.assessment_sleep_quality,
+                    foodQuality: existingUser.assessment_food_quality,
+                    trainingLocation: existingUser.assessment_training_location,
+                    imc: existingUser.assessment_imc,
+                    idealWeight: existingUser.assessment_ideal_weight,
+                    feedback: existingUser.assessment_feedback,
                 } : null;
 
                 const typedUser: User = {
-                    name: anyUser.name,
-                    email: anyUser.email,
-                    whatsapp: anyUser.whatsapp,
-                    registrationDate: anyUser.registrationDate,
-                    progress: anyUser.progress || [],
-                    assessment: assessment as AssessmentData | null,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    whatsapp: existingUser.whatsapp,
+                    registrationDate: existingUser.registrationDate,
+                    progress: existingUser.progress || [],
+                    assessment: assessment,
                 };
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
@@ -205,7 +204,7 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const userPayload = {
+                const userPayload: Database['public']['Tables']['users']['Insert'] = {
                     name: newUser.name,
                     email: newUser.email,
                     whatsapp: newUser.whatsapp,
@@ -221,6 +220,7 @@ const LandingPage = () => {
                     assessment_training_location: null,
                     assessment_imc: null,
                     assessment_ideal_weight: null,
+                    assessment_feedback: null,
                 };
 
                 const { error: insertError } = await supabase
@@ -333,7 +333,7 @@ const LandingPage = () => {
                 {state.settings.landingPage.beforeAndAfter.length > 0 && (
                     <section id="resultados" className="py-24 bg-dark-800">
                         <div className="container mx-auto px-4">
-                            <h2 className="text-3xl md:text-4xl font-bold font-heading mb-16 text-center text-white">Resultados Reais de Alunas Reais</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold font-heading mb-16 text-center text-white">{state.settings.landingPage.beforeAndAfterTitle}</h2>
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {state.settings.landingPage.beforeAndAfter.map((item, index) => (
                                     <BeforeAndAfterCard key={index} beforeImage={item.before} afterImage={item.after} name={item.name} />

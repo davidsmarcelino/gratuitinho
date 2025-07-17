@@ -1,8 +1,7 @@
 
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, AssessmentData } from './types.ts';
+import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, Database } from './types.ts';
 import { merge } from 'lodash-es';
 
 // ========= SUPABASE SETUP =========
@@ -26,7 +25,7 @@ O aplicativo não funcionará corretamente sem elas.
 ****************************************************************`);
 }
 
-export const supabase = createClient(effectiveSupabaseUrl, effectiveSupabaseKey);
+export const supabase = createClient<Database>(effectiveSupabaseUrl, effectiveSupabaseKey);
 
 
 // ========= CONSTANTS & DEFAULTS =========
@@ -73,10 +72,10 @@ const DEFAULT_COACH: Coach = {
 
 const INITIAL_SETTINGS: AdminSettings = {
   landingPage: {
-    title: 'DESTRAVE A QUEIMA DE GORDURA E SEQUE EM TEMPO RECORDE',
-    subtitle: 'Acesse 3 aulas gratuitas e descubra o método para transformar seu corpo de uma vez por todas, mesmo com pouco tempo para treinar.',
+    pageTitle: 'Aptus Fit',
     vslEnabled: false,
     beforeAndAfter: [],
+    beforeAndAfterTitle: 'Resultados Reais de Alunas Reais',
     brandName: 'FitConsult',
     heroTitleHighlight: 'Perca 15kg',
     heroTitle: 'em 90 Dias',
@@ -209,6 +208,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
         if (storedSettingsJSON) {
           const storedSettings = JSON.parse(storedSettingsJSON);
+          // Use lodash merge for deep merging, which is more robust for nested objects.
           loadedSettings = merge({}, INITIAL_SETTINGS, storedSettings);
         }
       } catch (error) {
@@ -221,7 +221,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             throw new Error(`Supabase fetch error: ${error.message}`);
         }
 
-        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => {
+        const users: User[] = (usersFromSupabase || []).map((dbUser) => {
             const assessment = dbUser.assessment_age != null ? {
                 age: dbUser.assessment_age,
                 height: dbUser.assessment_height,
@@ -233,6 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 trainingLocation: dbUser.assessment_training_location,
                 imc: dbUser.assessment_imc,
                 idealWeight: dbUser.assessment_ideal_weight,
+                feedback: dbUser.assessment_feedback,
             } : null;
 
             return {
@@ -241,7 +242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 whatsapp: dbUser.whatsapp,
                 registrationDate: dbUser.registrationDate,
                 progress: dbUser.progress || [],
-                assessment: assessment as AssessmentData | null,
+                assessment: assessment,
             };
         });
         
@@ -289,7 +290,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        const userPayload = {
+        const userPayload: Database['public']['Tables']['users']['Insert'] = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,
@@ -305,6 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment_training_location: user.assessment?.trainingLocation ?? null,
             assessment_imc: user.assessment?.imc ?? null,
             assessment_ideal_weight: user.assessment?.idealWeight ?? null,
+            assessment_feedback: user.assessment?.feedback ?? null,
         };
         
         const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
@@ -326,6 +328,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
+    localStorage.removeItem('isAdminAuthenticated');
     sessionStorage.removeItem('gratuitinho_user_email');
   }, [dispatch]);
 

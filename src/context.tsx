@@ -224,15 +224,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const users: User[] = (usersFromSupabase || []).map((dbUser) => {
             const assessment = dbUser.assessment_age != null ? {
                 age: dbUser.assessment_age,
-                height: dbUser.assessment_height!,
-                weight: dbUser.assessment_weight!,
-                activityLevel: dbUser.assessment_activity_level!,
-                goal: dbUser.assessment_goal!,
-                sleepQuality: dbUser.assessment_sleep_quality!,
-                foodQuality: dbUser.assessment_food_quality!,
-                trainingLocation: dbUser.assessment_training_location!,
-                imc: dbUser.assessment_imc!,
-                idealWeight: dbUser.assessment_ideal_weight!,
+                height: dbUser.assessment_height,
+                weight: dbUser.assessment_weight,
+                activityLevel: dbUser.assessment_activity_level,
+                goal: dbUser.assessment_goal,
+                sleepQuality: dbUser.assessment_sleep_quality,
+                foodQuality: dbUser.assessment_food_quality,
+                trainingLocation: dbUser.assessment_training_location,
+                imc: dbUser.assessment_imc,
+                idealWeight: dbUser.assessment_ideal_weight,
                 feedback: dbUser.assessment_feedback,
             } : null;
 

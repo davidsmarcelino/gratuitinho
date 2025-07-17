@@ -10,16 +10,16 @@ export type User = {
 };
 
 export type AssessmentData = {
-  age: number;
-  height: number;
-  weight: number;
-  activityLevel: 'sedentaria' | 'ativa' | 'muito_ativa';
-  goal: 'emagrecer' | 'definir' | 'ganhar_massa';
-  sleepQuality: number;
-  foodQuality: number;
-  trainingLocation: 'casa' | 'academia' | 'outro';
-  imc: number;
-  idealWeight: string;
+  age: number | null;
+  height: number | null;
+  weight: number | null;
+  activityLevel: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+  goal: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+  sleepQuality: number | null;
+  foodQuality: number | null;
+  trainingLocation: 'casa' | 'academia' | 'outro' | null;
+  imc: number | null;
+  idealWeight: string | null;
   feedback?: string | null;
 };
 
@@ -183,6 +183,7 @@ export interface Database {
           assessment_ideal_weight?: string | null;
           assessment_feedback?: string | null;
         };
+        Relationships: [];
       };
     };
     Views: {

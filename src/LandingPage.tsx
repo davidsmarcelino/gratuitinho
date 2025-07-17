@@ -173,15 +173,15 @@ const LandingPage = () => {
                 // Reconstruct assessment object from flattened Supabase columns
                 const assessment = existingUser.assessment_age != null ? {
                     age: existingUser.assessment_age,
-                    height: existingUser.assessment_height!,
-                    weight: existingUser.assessment_weight!,
-                    activityLevel: existingUser.assessment_activity_level!,
-                    goal: existingUser.assessment_goal!,
-                    sleepQuality: existingUser.assessment_sleep_quality!,
-                    foodQuality: existingUser.assessment_food_quality!,
-                    trainingLocation: existingUser.assessment_training_location!,
-                    imc: existingUser.assessment_imc!,
-                    idealWeight: existingUser.assessment_ideal_weight!,
+                    height: existingUser.assessment_height,
+                    weight: existingUser.assessment_weight,
+                    activityLevel: existingUser.assessment_activity_level,
+                    goal: existingUser.assessment_goal,
+                    sleepQuality: existingUser.assessment_sleep_quality,
+                    foodQuality: existingUser.assessment_food_quality,
+                    trainingLocation: existingUser.assessment_training_location,
+                    imc: existingUser.assessment_imc,
+                    idealWeight: existingUser.assessment_ideal_weight,
                     feedback: existingUser.assessment_feedback,
                 } : null;
 

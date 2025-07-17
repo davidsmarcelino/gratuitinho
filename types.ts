@@ -1,3 +1,4 @@
+
 // ========= TYPES =========
 export type User = {
   name: string;
@@ -9,16 +10,17 @@ export type User = {
 };
 
 export type AssessmentData = {
-  age: number;
-  height: number;
-  weight: number;
-  activityLevel: 'sedentaria' | 'ativa' | 'muito_ativa';
-  goal: 'emagrecer' | 'definir' | 'ganhar_massa';
-  sleepQuality: number;
-  foodQuality: number;
-  trainingLocation: 'casa' | 'academia' | 'outro';
-  imc: number;
-  idealWeight: string;
+  age: number | null;
+  height: number | null;
+  weight: number | null;
+  activityLevel: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+  goal: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+  sleepQuality: number | null;
+  foodQuality: number | null;
+  trainingLocation: 'casa' | 'academia' | 'outro' | null;
+  imc: number | null;
+  idealWeight: string | null;
+  feedback?: string | null;
 };
 
 export type Lesson = {
@@ -59,16 +61,16 @@ export type FreeClass = {
 
 export type AdminSettings = {
   landingPage: {
+    pageTitle: string;
     brandName: string;
     heroTitleHighlight: string;
     heroTitle: string;
     heroSubtitle: string;
     heroDescription: string;
     heroImage: string;
-    title: string;
-    subtitle: string;
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
+    beforeAndAfterTitle: string;
   };
   freeClassesSection: {
     title: string;
@@ -121,4 +123,80 @@ export interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   logout: () => void;
+}
+
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          name: string;
+          email: string;
+          whatsapp: string;
+          registrationDate: string;
+          progress: number[];
+          assessment_age: number | null;
+          assessment_height: number | null;
+          assessment_weight: number | null;
+          assessment_activity_level: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality: number | null;
+          assessment_food_quality: number | null;
+          assessment_training_location: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc: number | null;
+          assessment_ideal_weight: string | null;
+          assessment_feedback: string | null;
+        };
+        Insert: {
+          name: string;
+          email: string;
+          whatsapp: string;
+          registrationDate: string;
+          progress: number[];
+          assessment_age?: number | null;
+          assessment_height?: number | null;
+          assessment_weight?: number | null;
+          assessment_activity_level?: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal?: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality?: number | null;
+          assessment_food_quality?: number | null;
+          assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc?: number | null;
+          assessment_ideal_weight?: string | null;
+          assessment_feedback?: string | null;
+        };
+        Update: {
+          name?: string;
+          email?: string;
+          whatsapp?: string;
+          registrationDate?: string;
+          progress?: number[];
+          assessment_age?: number | null;
+          assessment_height?: number | null;
+          assessment_weight?: number | null;
+          assessment_activity_level?: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal?: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality?: number | null;
+          assessment_food_quality?: number | null;
+          assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc?: number | null;
+          assessment_ideal_weight?: string | null;
+          assessment_feedback?: string | null;
+        };
+        Relationships: [];
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
 }
