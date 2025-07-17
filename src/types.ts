@@ -187,15 +187,15 @@ export type Database = {
       settings: {
         Row: {
           id: number;
-          config: any;
+          config: AdminSettings;
         };
         Insert: {
           id: number;
-          config: any;
+          config: AdminSettings;
         };
         Update: {
           id?: number;
-          config?: any;
+          config?: AdminSettings;
         };
         Relationships: [];
       };

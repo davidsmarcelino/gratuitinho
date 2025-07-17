@@ -121,7 +121,7 @@ Esta é a sua área de gerenciamento. Para acessar, visite `[URL_DO_SEU_APP]/#/a
     *   **Landing Page:** Controle todos os textos (títulos, subtítulos, descrições) e a **imagem principal (Hero), que pode ser enviada do seu computador**.
     *   **Fotos Antes & Depois:** Adicione e gerencie as fotos de resultados das suas alunas.
     *   **Conheça o Treinador:** Edite o nome, a biografia, as certificações e a **foto do treinador (upload do computador)**.
-    *   **Página de Upsell:** Configure todos os aspectos da sua página de vendas, incluindo textos, preços, link de checkout e o tipo de mídia a ser exibida.
+    *   **Página de Upsell:** Configure todos os aspectos da sua página de vendas. Escolha entre vídeo, imagem (com upload) ou nenhum elemento de mídia. Edite todos os textos, preços, **habilite ou desabilite o parcelamento**, defina o número e valor das parcelas, e insira o **link de checkout** para o botão de compra.
     *   **Depoimentos:** Adicione, edite ou remova depoimentos. Você pode usar uma URL para a imagem da aluna ou **enviá-la do seu computador**.
 
 *   **Configurações (Gerais e IA):**

@@ -167,6 +167,47 @@ VALUES (1, '{
 
 ---
 
+## Parte 1.5: Configurando o Armazenamento de Imagens (Storage) - OBRIGATÓRIO
+
+Para que o upload de imagens do seu computador funcione, precisamos ativar e configurar o "Storage" da Supabase.
+
+### Passo 1: Criar um "Bucket" para as Imagens
+1.  No menu do seu projeto Supabase, clique no ícone de **Storage** (parece um cilindro).
+2.  Clique no botão **"New Bucket"**.
+3.  No campo **"Bucket name"**, digite exatamente `images`.
+4.  Marque a opção **"Public bucket"**.
+5.  Clique em **"Create Bucket"**.
+
+### Passo 2: Configurar as Permissões do Bucket
+Precisamos dizer ao Supabase que qualquer pessoa pode fazer upload para este bucket.
+1.  Volte para o **SQL Editor**.
+2.  Clique em **"+ New query"** novamente.
+3.  **Copie e cole TODO o código abaixo** no editor:
+
+```sql
+-- ========= POLÍTICAS PARA O BUCKET 'images' =========
+
+-- 1. Permite que qualquer pessoa veja os arquivos no bucket 'images'.
+-- Isso é necessário para que as imagens apareçam no seu site.
+CREATE POLICY "Public Read Access"
+ON storage.objects FOR SELECT
+TO public
+USING ( bucket_id = 'images' );
+
+-- 2. Permite que qualquer pessoa (anônima) faça upload de arquivos para o bucket 'images'.
+-- Isso é necessário para que o painel de administração possa enviar imagens.
+CREATE POLICY "Anon Upload"
+ON storage.objects FOR INSERT
+TO public
+WITH CHECK ( bucket_id = 'images' );
+
+```
+4. Clique no botão verde **"RUN"**.
+
+Agora seu armazenamento de imagens está pronto para ser usado pelo aplicativo!
+
+---
+
 ## Parte 2: Configurando as Chaves e Variáveis de Ambiente
 
 Para que o aplicativo funcione, tanto localmente quanto online, ele precisa de acesso a algumas chaves secretas. Nós as gerenciamos com "Variáveis de Ambiente".

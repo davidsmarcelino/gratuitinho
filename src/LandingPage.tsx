@@ -156,17 +156,15 @@ const LandingPage = () => {
 
         try {
             // Check for existing user first.
-            const userResponse = await supabase
+            const { data: existingUser, error: userResponseError } = await supabase
                 .from('users')
                 .select('*')
                 .eq('email', formData.email)
                 .maybeSingle();
             
-            if (userResponse.error) {
-                throw new Error(`Erro ao verificar usuário: ${userResponse.error.message}`);
+            if (userResponseError) {
+                throw new Error(`Erro ao verificar usuário: ${userResponseError.message}`);
             }
-
-            const existingUser = userResponse.data;
 
             if (existingUser) {
                 // User exists, log them in.

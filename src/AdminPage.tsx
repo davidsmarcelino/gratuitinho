@@ -23,7 +23,7 @@ const AdminPage = () => {
         setIsSaving(true);
         const { error } = await supabase
             .from('settings')
-            .upsert({ id: 1, config: settings });
+            .upsert([{ id: 1, config: settings }], { onConflict: 'id' });
 
         if (error) {
             alert(`Erro ao salvar configurações: ${error.message}`);
@@ -112,17 +112,35 @@ const AdminPage = () => {
         setSettings(prev => ({ ...prev, upsellPage: { ...prev.upsellPage, features }}));
     };
 
-    const handleImageUpload = (file: File, callback: (url: string) => void) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-            callback(reader.result as string);
-        };
-        reader.readAsDataURL(file);
+    const handleSupabaseImageUpload = async (file: File, callback: (url: string) => void) => {
+        try {
+            const filePath = `public/${Date.now()}-${file.name}`;
+            
+            const { error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
+            
+            if (!data.publicUrl) {
+                throw new Error("Não foi possível obter a URL pública da imagem.");
+            }
+            
+            callback(data.publicUrl);
+            
+        } catch (error: any) {
+            console.error('Erro ao fazer upload da imagem para o Supabase Storage:', error);
+            alert(`Falha no upload da imagem: ${error.message}`);
+        }
     };
 
-    const createUploadHandler = (callback: (image: string) => void) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const createUploadHandler = (callback: (url: string) => void) => async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
-            handleImageUpload(e.target.files[0], callback);
+            await handleSupabaseImageUpload(e.target.files[0], callback);
         }
     };
 
@@ -158,8 +176,8 @@ const AdminPage = () => {
     const usersWhoCompleted = freeLessons.length > 0 ? state.users.filter(u => u.progress.length >= freeLessons.length).length : 0;
     const averageProgress = totalUsers > 0 ? (state.users.reduce((acc, user) => acc + (freeLessons.length > 0 ? (user.progress.length / freeLessons.length) * 100 : 0), 0) / totalUsers) : 0;
 
-    const FileInputField = ({ id, label, onChange }: { id: string, label: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }) => (
-        <label htmlFor={id} className="cursor-pointer text-xs text-brand hover:underline">
+    const FileInputField = ({ id, label, onChange, buttonStyle = false }: { id: string, label: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void, buttonStyle?: boolean }) => (
+        <label htmlFor={id} className={`cursor-pointer ${buttonStyle ? 'bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600' : 'text-xs text-brand hover:underline'}`}>
             {label}
             <input id={id} type="file" accept="image/*" onChange={onChange} className="sr-only" />
         </label>
@@ -252,13 +270,18 @@ const AdminPage = () => {
                                             <div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Descrição:</label><textarea value={lesson.description} onChange={e => handleLessonChange(e, index, 'description')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div>
                                             <div>
                                                 <label className="text-sm font-medium text-gray-300 mb-1 block">Thumbnail da Aula</label>
-                                                <input type="text" value={lesson.thumbnail} onChange={e => handleLessonChange(e, index, 'thumbnail')} placeholder="Cole a URL da imagem aqui" className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
-                                                <div className="mt-1">
-                                                    <FileInputField id={`lesson-thumb-${index}`} label="Ou envie do computador..." onChange={createUploadHandler(image => {
-                                                        const newLessons = [...settings.lessons];
-                                                        newLessons[index].thumbnail = image;
-                                                        setSettings(prev => ({...prev, lessons: newLessons}));
-                                                    })} />
+                                                <div className="flex items-end gap-4 mt-2">
+                                                    {lesson.thumbnail && <img src={lesson.thumbnail} alt="Thumbnail preview" className="w-32 h-auto rounded-lg object-cover bg-dark-700"/>}
+                                                    <FileInputField 
+                                                        id={`lesson-thumb-${index}`} 
+                                                        label="Enviar/Alterar"
+                                                        onChange={createUploadHandler(url => {
+                                                            const newLessons = [...settings.lessons];
+                                                            newLessons[index].thumbnail = url;
+                                                            setSettings(prev => ({...prev, lessons: newLessons}));
+                                                        })} 
+                                                        buttonStyle={true}
+                                                    />
                                                 </div>
                                             </div>
                                             <div className="flex items-center self-end gap-4"><label className="text-sm font-medium text-gray-300">É VIP?</label><input type="checkbox" checked={!!lesson.isVip} onChange={e => handleLessonChange(e, index, 'isVip')} className="h-4 w-4 text-brand bg-gray-700 border-gray-600 rounded focus:ring-brand" /></div>
@@ -288,11 +311,11 @@ const AdminPage = () => {
                                         <h3 className="text-lg font-bold mb-2">Seção Principal (Hero)</h3>
                                         <div className="grid md:grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-1">Destaque do Título (Ex: Perca 15kg)</label>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Destaque do Título</label>
                                                 <input type="text" value={settings.landingPage.heroTitleHighlight} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitleHighlight')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium text-gray-300 mb-1">Restante do Título (Ex: em 90 Dias)</label>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Restante do Título</label>
                                                 <input type="text" value={settings.landingPage.heroTitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
                                             </div>
                                         </div>
@@ -306,18 +329,129 @@ const AdminPage = () => {
                                         </div>
                                         <div className="mt-4">
                                             <label className="block text-sm font-medium text-gray-300 mb-1">Imagem do Hero</label>
-                                            <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} placeholder="Cole a URL da imagem aqui" className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
-                                            <div className="mt-1">
-                                                <FileInputField id="hero-image-upload" label="Ou envie do computador..." onChange={createUploadHandler(image => setSettings(prev => ({...prev, landingPage: {...prev.landingPage, heroImage: image}})))} />
+                                            <div className="flex items-end gap-4 mt-2">
+                                                {settings.landingPage.heroImage && <img src={settings.landingPage.heroImage} alt="Hero preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>}
+                                                <FileInputField 
+                                                    id="hero-image-upload" 
+                                                    label="Enviar/Alterar Imagem" 
+                                                    onChange={createUploadHandler(url => setSettings(prev => ({...prev, landingPage: {...prev.landingPage, heroImage: url}})))} 
+                                                    buttonStyle={true}
+                                                />
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2><div className="space-y-4">{settings.landingPage.beforeAndAfter.map((item, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveBeforeAfter(index)} title="Remover" className="absolute top-2 right-2 text-red-500 hover:text-red-400"><TrashIcon className="w-5 h-5"/></button><div className="grid md:grid-cols-3 gap-4 items-end"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome da Aluna</label><input type="text" value={item.name} onChange={(e) => handleBeforeAfterChange(e, index)} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"/></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto "Antes"</label><FileInputField id={`before-img-${index}`} label="Enviar do computador..." onChange={createUploadHandler(image => {const n = [...settings.landingPage.beforeAndAfter]; n[index].before = image; setSettings(s=>({...s, landingPage: {...s.landingPage, beforeAndAfter: n}}))})} /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto "Depois"</label><FileInputField id={`after-img-${index}`} label="Enviar do computador..." onChange={createUploadHandler(image => {const n = [...settings.landingPage.beforeAndAfter]; n[index].after = image; setSettings(s=>({...s, landingPage: {...s.landingPage, beforeAndAfter: n}}))})} /></div></div></div>))}</div><div className="mt-4"><button onClick={handleAddBeforeAfter} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Par Antes/Depois</button></div></div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Seção "Conheça o Treinador"</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome do Treinador</label><input type="text" value={settings.coach.name} onChange={(e) => handleInputChange(e, 'coach', 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Bio do Treinador</label><textarea value={settings.coach.bio} onChange={(e) => handleInputChange(e, 'coach', 'bio')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto do Treinador</label><div className="flex items-center gap-4 mt-2"><img src={settings.coach.image} alt="Coach preview" className="w-24 h-24 rounded-lg object-cover bg-dark-700"/><FileInputField id="coach-image-upload" label="Trocar imagem..." onChange={createUploadHandler(image => setSettings(prev => ({...prev, coach: {...prev.coach, image}})))} /></div></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Certificações (uma por linha)</label><textarea value={settings.coach.certifications.join('\n')} onChange={handleCoachCertificationsChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div></div></div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Página de Upsell</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">Imagem da Aluna</label><input type="text" value={testimonial.image} onChange={e => handleTestimonialChange(e, index, 'image')} placeholder="Cole a URL aqui" className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /><div className="mt-1"><FileInputField id={`testimonial-img-${index}`} label="Ou envie do computador..." onChange={createUploadHandler(image => {const n = [...settings.testimonials]; n[index].image = image; setSettings(s=>({...s, testimonials: n}))})}/></div></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2>
+                                <div className="space-y-4">{settings.landingPage.beforeAndAfter.map((item, index) => (
+                                    <div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800">
+                                        <button onClick={() => handleRemoveBeforeAfter(index)} title="Remover" className="absolute top-2 right-2 text-red-500 hover:text-red-400"><TrashIcon className="w-5 h-5"/></button>
+                                        <div className="grid md:grid-cols-3 gap-4 items-end">
+                                            <div className="md:col-span-3">
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Nome da Aluna</label>
+                                                <input type="text" value={item.name} onChange={(e) => handleBeforeAfterChange(e, index)} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"/>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Foto "Antes"</label>
+                                                {item.before && <img src={item.before} alt="Preview Antes" className="w-24 h-32 object-cover rounded-md bg-dark-700 mb-2" />}
+                                                <FileInputField 
+                                                    id={`before-img-${index}`} 
+                                                    label="Enviar Imagem"
+                                                    onChange={createUploadHandler(url => {const n = [...settings.landingPage.beforeAndAfter]; n[index].before = url; setSettings(s=>({...s, landingPage: {...s.landingPage, beforeAndAfter: n}}))})} 
+                                                    buttonStyle
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-300 mb-1">Foto "Depois"</label>
+                                                {item.after && <img src={item.after} alt="Preview Depois" className="w-24 h-32 object-cover rounded-md bg-dark-700 mb-2" />}
+                                                <FileInputField 
+                                                    id={`after-img-${index}`} 
+                                                    label="Enviar Imagem"
+                                                    onChange={createUploadHandler(url => {const n = [...settings.landingPage.beforeAndAfter]; n[index].after = url; setSettings(s=>({...s, landingPage: {...s.landingPage, beforeAndAfter: n}}))})}
+                                                    buttonStyle
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>))}
+                                </div>
+                                <div className="mt-4"><button onClick={handleAddBeforeAfter} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Par Antes/Depois</button></div>
+                            </div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Seção "Conheça o Treinador"</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome do Treinador</label><input type="text" value={settings.coach.name} onChange={(e) => handleInputChange(e, 'coach', 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Bio do Treinador</label><textarea value={settings.coach.bio} onChange={(e) => handleInputChange(e, 'coach', 'bio')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto do Treinador</label><div className="flex items-end gap-4 mt-2"><img src={settings.coach.image} alt="Coach preview" className="w-24 h-32 rounded-lg object-cover bg-dark-700"/><FileInputField id="coach-image-upload" label="Enviar/Alterar Imagem" onChange={createUploadHandler(url => setSettings(prev => ({...prev, coach: {...prev.coach, image: url}})))} buttonStyle/></div></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Certificações (uma por linha)</label><textarea value={settings.coach.certifications.join('\n')} onChange={handleCoachCertificationsChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div></div></div>
+                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Página de Upsell</h2>
+                                <div className="space-y-4">
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Tipo de Mídia na Página</label>
+                                        <select value={settings.upsellPage.mediaType} onChange={(e) => handleInputChange(e, 'upsellPage', 'mediaType')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2">
+                                            <option value="video">Vídeo</option>
+                                            <option value="image">Imagem</option>
+                                            <option value="none">Nenhuma</option>
+                                        </select>
+                                    </div>
+
+                                    {settings.upsellPage.mediaType === 'video' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label>
+                                            <input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                        </div>
+                                    )}
+
+                                    {settings.upsellPage.mediaType === 'image' && (
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Imagem da Oferta</label>
+                                            <div className="flex items-end gap-4 mt-2">
+                                                {settings.upsellPage.imageUrl && <img src={settings.upsellPage.imageUrl} alt="Upsell preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>}
+                                                <FileInputField 
+                                                    id="upsell-image-upload" 
+                                                    label="Enviar/Alterar Imagem" 
+                                                    onChange={createUploadHandler(url => setSettings(prev => ({...prev, upsellPage: {...prev.upsellPage, imageUrl: url}})))}
+                                                    buttonStyle={true}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                     {settings.upsellPage.mediaType === 'none' && (
+                                         <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo (quando não há mídia)</label>
+                                            <textarea value={settings.upsellPage.subtitleNoMedia} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitleNoMedia')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24" />
+                                        </div>
+                                    )}
+
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div>
+                                    
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    </div>
+                                    
+                                    <div className="pt-4 border-t border-gray-700 space-y-4">
+                                         <div className="flex items-center mt-2">
+                                            <input type="checkbox" id="installments" checked={settings.upsellPage.installmentsEnabled} onChange={(e) => handleInputChange(e, 'upsellPage', 'installmentsEnabled')} className="h-4 w-4 text-brand bg-gray-700 border-gray-600 rounded focus:ring-brand" />
+                                            <label htmlFor="installments" className="ml-2 block text-sm text-gray-300">Habilitar parcelamento</label>
+                                        </div>
+
+                                        {settings.upsellPage.installmentsEnabled && (
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Número de Parcelas</label>
+                                                    <input type="number" value={settings.upsellPage.installmentsNumber} onChange={(e) => handleInputChange(e, 'upsellPage', 'installmentsNumber')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                                 <div>
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Valor da Parcela (Ex: R$19,70)</label>
+                                                    <input type="text" value={settings.upsellPage.installmentsPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'installmentsPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">Link de Checkout</label><input type="text" value={settings.upsellPage.ctaLink} onChange={(e) => handleInputChange(e, 'upsellPage', 'ctaLink')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                </div>
+                            </div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">Imagem da Aluna</label><div className="flex items-end gap-4 mt-2"><img src={testimonial.image} alt="Testimonial preview" className="w-20 h-20 rounded-full object-cover bg-dark-700"/><FileInputField id={`testimonial-img-${index}`} label="Enviar/Alterar" onChange={createUploadHandler(url => {const n = [...settings.testimonials]; n[index].image = url; setSettings(s=>({...s, testimonials: n}))})} buttonStyle/></div></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>
                         </div>
                     )}
                     {activeTab === 'settings' && (
