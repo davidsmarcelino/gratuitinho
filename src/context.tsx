@@ -1,7 +1,7 @@
 
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, FreeClassInfo } from './types.ts';
+import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, FreeClassInfo, AssessmentData } from './types.ts';
 
 // ========= SUPABASE SETUP =========
 // Credentials are now loaded from environment variables for security.
@@ -199,15 +199,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncStatus: 'idle',
   });
 
-  // Effect to load initial settings from localStorage and users from Supabase
+  // Effect to load initial settings and user data
   useEffect(() => {
     const loadInitialData = async () => {
       let loadedSettings = INITIAL_SETTINGS;
       try {
         const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
         if (storedSettingsJSON) {
-           // Deep merge to ensure new properties from INITIAL_SETTINGS are added
-          // while preserving user's existing settings.
           const storedSettings = JSON.parse(storedSettingsJSON);
           loadedSettings = {
             ...INITIAL_SETTINGS,
@@ -231,23 +229,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             throw new Error(`Supabase fetch error: ${error.message}`);
         }
 
-        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => ({
-            name: dbUser.name,
-            email: dbUser.email,
-            whatsapp: dbUser.whatsapp,
-            registrationDate: dbUser.registrationDate,
-            progress: dbUser.progress || [],
-            assessment: dbUser.assessment || null,
-        }));
+        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => {
+            const assessment = dbUser.assessment_age != null ? {
+              age: dbUser.assessment_age,
+              height: dbUser.assessment_height,
+              weight: dbUser.assessment_weight,
+              activityLevel: dbUser.assessment_activity_level,
+              goal: dbUser.assessment_goal,
+              sleepQuality: dbUser.assessment_sleep_quality,
+              foodQuality: dbUser.assessment_food_quality,
+              trainingLocation: dbUser.assessment_training_location,
+              imc: dbUser.assessment_imc,
+              idealWeight: dbUser.assessment_ideal_weight,
+            } : null;
+
+            return {
+              name: dbUser.name,
+              email: dbUser.email,
+              whatsapp: dbUser.whatsapp,
+              registrationDate: dbUser.registrationDate,
+              progress: dbUser.progress || [],
+              assessment: assessment as AssessmentData | null,
+            };
+        });
         
-        // Load logged-in user from local storage for persistence
+        // Load logged-in user from local storage for a persistent session.
+        // This ensures the user stays logged in even after closing the browser.
         const storedUserEmail = localStorage.getItem('gratuitinho_user_email');
         const currentUser = storedUserEmail ? (users.find(u => u.email === storedUserEmail) || null) : null;
 
         dispatch({ type: 'SET_STATE', payload: { user: currentUser, users: users, settings: loadedSettings, appStatus: 'ready', syncStatus: 'idle' } });
       } catch (error) {
         console.error("Failed to load users from Supabase", error);
-        // Still load the app, but with empty user data
         dispatch({ type: 'SET_STATE', payload: { ...state, settings: loadedSettings, users: [], user: null, appStatus: 'ready' } });
       }
     };
@@ -255,7 +268,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!areCredentialsMissing) {
       loadInitialData();
     } else {
-      // If credentials are missing, just set the app status to ready to show the warning.
       dispatch({ type: 'SET_STATE', payload: { ...state, appStatus: 'ready' } });
     }
      // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -273,29 +285,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     if (areCredentialsMissing || state.appStatus !== 'ready' || !state.user) {
       if (!state.user) {
+        // When logging out, remove the user's email from persistent storage.
         localStorage.removeItem('gratuitinho_user_email');
       }
       return;
     }
     
     const user = state.user;
+    // Persist the current user's email to localStorage.
+    // This is the key to keeping the user logged in across sessions.
     localStorage.setItem('gratuitinho_user_email', user.email);
        
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        // By creating a plain payload object from the user state, we prevent complex type-checking issues
-        // with the Supabase client library that can lead to "type instantiation is excessively deep" errors.
         const userPayload = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,
             registrationDate: user.registrationDate,
-            assessment: user.assessment || null,
-            progress: user.progress
+            progress: user.progress,
+            assessment_age: user.assessment?.age ?? null,
+            assessment_height: user.assessment?.height ?? null,
+            assessment_weight: user.assessment?.weight ?? null,
+            assessment_activity_level: user.assessment?.activityLevel ?? null,
+            assessment_goal: user.assessment?.goal ?? null,
+            assessment_sleep_quality: user.assessment?.sleepQuality ?? null,
+            assessment_food_quality: user.assessment?.foodQuality ?? null,
+            assessment_training_location: user.assessment?.trainingLocation ?? null,
+            assessment_imc: user.assessment?.imc ?? null,
+            assessment_ideal_weight: user.assessment?.idealWeight ?? null,
         };
         
-        // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
         const { error } = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
 
         if (error) {
@@ -315,6 +336,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
+    // Clear the persistent session on logout.
     localStorage.removeItem('gratuitinho_user_email');
   }, [dispatch]);
 

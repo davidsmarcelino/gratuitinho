@@ -1,4 +1,3 @@
-
 # Guia de Banco de Dados e Hospedagem (Supabase + Vercel)
 
 Este guia foi criado para te ajudar a configurar e colocar seu aplicativo no ar, mesmo que você não tenha nenhum conhecimento de programação. Vamos usar duas ferramentas gratuitas e poderosas:
@@ -45,8 +44,17 @@ CREATE TABLE public.users (
   whatsapp TEXT NOT NULL,
   -- Data e hora em que a aluna se cadastrou. O valor padrão é a hora atual.
   "registrationDate" TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- Armazena os dados da avaliação em formato JSON (idade, peso, objetivos, etc.).
-  assessment JSONB,
+  -- Campos da avaliação (separados para melhor organização dos dados).
+  assessment_age INT,
+  assessment_height INT,
+  assessment_weight INT,
+  assessment_activity_level TEXT,
+  assessment_goal TEXT,
+  assessment_sleep_quality INT,
+  assessment_food_quality INT,
+  assessment_training_location TEXT,
+  assessment_imc NUMERIC(5, 2),
+  assessment_ideal_weight TEXT,
   -- Armazena um array de IDs das aulas concluídas em formato JSON.
   progress JSONB DEFAULT '[]'::jsonb NOT NULL
 );
@@ -54,6 +62,9 @@ CREATE TABLE public.users (
 -- Adiciona comentários para clareza.
 COMMENT ON TABLE public.users IS 'Tabela para armazenar os dados das alunas cadastradas.';
 COMMENT ON COLUMN public.users.email IS 'Email da aluna, usado como identificador único (PK).';
+COMMENT ON COLUMN public.users.assessment_age IS 'Idade da aluna na avaliação.';
+COMMENT ON COLUMN public.users.assessment_imc IS 'IMC calculado na avaliação.';
+COMMENT ON COLUMN public.users.assessment_goal IS 'Objetivo principal da aluna (ex: emagrecer).';
 
 -- Habilita a Segurança em Nível de Linha (RLS - Row Level Security).
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
@@ -203,7 +214,7 @@ Você vai precisar de 3 chaves:
     *   Copie o valor do campo **Project URL**.
 2.  **Supabase Anon (public) Key:**
     *   Na mesma página da API, na seção **Project API Keys**, copie o valor da chave `anon` `public`.
-3.  **Google Gemini API Key:**
+3.  **Google Gemini API Key (para Feedback da IA):**
     *   Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
     *   Faça login com sua conta Google.
     *   Clique em **"Create API key in new project"**.
@@ -225,8 +236,8 @@ Para rodar o aplicativo no seu computador, você precisa criar um arquivo para g
 VITE_SUPABASE_URL="COLE_AQUI_SUA_URL_DO_SUPABASE"
 VITE_SUPABASE_KEY="COLE_AQUI_SUA_CHAVE_ANON_DO_SUPABASE"
 
-# Google Gemini API Key
-VITE_GEMINI_API_KEY="COLE_AQUI_SUA_CHAVE_DA_API_DO_GEMINI"
+# Google Gemini API Key for AI Feedback feature
+VITE_AI_FEEDBACK_API_KEY="COLE_AQUI_SUA_CHAVE_DA_API_DO_GEMINI"
 ```
 3.  Salve o arquivo. **Importante:** Este arquivo `.env` nunca deve ser enviado para o GitHub. Ele é apenas para o seu uso local.
 
@@ -255,7 +266,7 @@ A Vercel precisa encontrar seu código em um repositório do GitHub.
         *   **NAME:** `VITE_SUPABASE_KEY`
         *   **VALUE:** Cole aqui a sua **chave anon do Supabase**.
     *   **Variável 3:**
-        *   **NAME:** `VITE_GEMINI_API_KEY`
+        *   **NAME:** `VITE_AI_FEEDBACK_API_KEY`
         *   **VALUE:** Cole aqui a sua **chave da API do Gemini**.
 7.  Após adicionar as três, clique no botão azul **"Deploy"**.
 8.  Aguarde alguns minutos. A Vercel vai instalar tudo e publicar seu site.

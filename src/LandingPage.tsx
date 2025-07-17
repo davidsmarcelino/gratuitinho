@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial } from './types.ts';
+import { User, Testimonial, AssessmentData } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -170,33 +169,55 @@ const LandingPage = () => {
 
             if (existingUser) {
                 // User exists, log them in.
-                // By casting existingUser to 'any', we prevent TypeScript from getting stuck in a
-                // potentially recursive type definition from the Supabase client library.
+                // Reconstruct assessment object from flattened Supabase columns
                 const anyUser: any = existingUser;
+                const assessment = anyUser.assessment_age != null ? {
+                    age: anyUser.assessment_age,
+                    height: anyUser.assessment_height,
+                    weight: anyUser.assessment_weight,
+                    activityLevel: anyUser.assessment_activity_level,
+                    goal: anyUser.assessment_goal,
+                    sleepQuality: anyUser.assessment_sleep_quality,
+                    foodQuality: anyUser.assessment_food_quality,
+                    trainingLocation: anyUser.assessment_training_location,
+                    imc: anyUser.assessment_imc,
+                    idealWeight: anyUser.assessment_ideal_weight,
+                } : null;
+
                 const typedUser: User = {
                     name: anyUser.name,
                     email: anyUser.email,
                     whatsapp: anyUser.whatsapp,
                     registrationDate: anyUser.registrationDate,
                     progress: anyUser.progress || [],
-                    assessment: anyUser.assessment || null,
+                    assessment: assessment as AssessmentData | null,
                 };
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
             } else {
                 // User does not exist, create new one.
-                const userToInsert = {
+                // Create a payload for Supabase with a flat structure.
+                const userPayload = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,
                     registrationDate: new Date().toISOString(),
-                    progress: [] as number[],
-                    assessment: null,
+                    progress: [],
+                    assessment_age: null,
+                    assessment_height: null,
+                    assessment_weight: null,
+                    assessment_activity_level: null,
+                    assessment_goal: null,
+                    assessment_sleep_quality: null,
+                    assessment_food_quality: null,
+                    assessment_training_location: null,
+                    assessment_imc: null,
+                    assessment_ideal_weight: null,
                 };
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([userToInsert] as any);
+                    .insert([userPayload] as any);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation
@@ -207,8 +228,14 @@ const LandingPage = () => {
                 
                 // If insert is successful, create the full User object for the state
                 const newUser: User = {
-                    ...userToInsert
+                    name: formData.name,
+                    email: formData.email,
+                    whatsapp: formData.whatsapp,
+                    registrationDate: userPayload.registrationDate,
+                    progress: [],
+                    assessment: null,
                 };
+                
                 dispatch({ type: 'ADD_USER', payload: newUser });
                 dispatch({ type: 'SET_USER', payload: newUser });
                 navigate('/dashboard');
@@ -268,10 +295,6 @@ const LandingPage = () => {
                         <div className="hidden md:block">
                             <div className="relative">
                                 <img src={heroImage} alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
-                                <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-dark-900 p-3 rounded-lg shadow-lg">
-                                    <p className="font-bold">Resultados Reais</p>
-                                    <p className="text-sm">Transformação em 90 dias</p>
-                                </div>
                             </div>
                         </div>
                     </div>
