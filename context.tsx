@@ -307,7 +307,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment_ideal_weight: user.assessment?.idealWeight ?? null,
         };
         
-        const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
 
         if (error) {
             console.error('Error saving user data to Supabase:', error);

@@ -1,7 +1,6 @@
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, AssessmentData, Database } from './types.ts';
+import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, Database } from './types.ts';
 import { merge } from 'lodash-es';
 
 // ========= SUPABASE SETUP =========
@@ -289,7 +288,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        const userPayload = {
+        const userPayload: Database['public']['Tables']['users']['Insert'] = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,

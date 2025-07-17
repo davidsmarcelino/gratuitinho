@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial, AssessmentData } from './types.ts';
+import { User, Testimonial, Database } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -197,7 +196,7 @@ const LandingPage = () => {
             } else {
                 // User does not exist, create new one.
                 // Create a payload for Supabase with a flat structure.
-                const userPayload = {
+                const userPayload: Database['public']['Tables']['users']['Insert'] = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,
