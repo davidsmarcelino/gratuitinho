@@ -169,14 +169,17 @@ const LandingPage = () => {
             const existingUser = userResponse.data;
 
             if (existingUser) {
-                // User exists, log them in
+                // User exists, log them in.
+                // By casting existingUser to 'any', we prevent TypeScript from getting stuck in a
+                // potentially recursive type definition from the Supabase client library.
+                const anyUser: any = existingUser;
                 const typedUser: User = {
-                    name: existingUser.name,
-                    email: existingUser.email,
-                    whatsapp: existingUser.whatsapp,
-                    registrationDate: existingUser.registrationDate,
-                    progress: existingUser.progress || [],
-                    assessment: existingUser.assessment || null,
+                    name: anyUser.name,
+                    email: anyUser.email,
+                    whatsapp: anyUser.whatsapp,
+                    registrationDate: anyUser.registrationDate,
+                    progress: anyUser.progress || [],
+                    assessment: anyUser.assessment || null,
                 };
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
@@ -191,15 +194,15 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
-                const insertResponse = await supabase
+                const { error: insertError } = await supabase
                     .from('users')
                     .insert([userToInsert] as any);
 
-                if (insertResponse.error) {
-                    if (insertResponse.error.code === '23505') { // Handle unique constraint violation
+                if (insertError) {
+                    if (insertError.code === '23505') { // Handle unique constraint violation
                         throw new Error('Este e-mail já está cadastrado.');
                     }
-                    throw new Error(`Erro ao criar usuário: ${insertResponse.error.message}`);
+                    throw new Error(`Erro ao criar usuário: ${insertError.message}`);
                 }
                 
                 // If insert is successful, create the full User object for the state

@@ -268,7 +268,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [state.settings, state.appStatus]);
 
-  // Effect to save updated user to Supabase and session storage
+  // Effect to save updated user to Supabase and local storage
   const userJson = JSON.stringify(state.user);
   useEffect(() => {
     if (areCredentialsMissing || state.appStatus !== 'ready' || !state.user) {

@@ -94,7 +94,11 @@ const AdminPage = () => {
     
     const handleTestimonialChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number, field: keyof Testimonial) => {
         const newTestimonials = [...settings.testimonials];
-        (newTestimonials[index] as any)[field] = e.target.value;
+        let value = e.target.value;
+        if (field === 'videoId') {
+            value = extractYouTubeId(value);
+        }
+        (newTestimonials[index] as any)[field] = value;
         setSettings(prev => ({...prev, testimonials: newTestimonials}));
     };
 
@@ -142,11 +146,37 @@ const AdminPage = () => {
             });
         }
     };
+    
+    const handleHeroImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
+                ...prev, landingPage: { ...prev.landingPage, heroImage: image }
+            })));
+        }
+    };
 
     const handleCoachImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files?.[0]) {
             handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
                 ...prev, coach: { ...prev.coach, image }
+            })));
+        }
+    };
+
+    const handleTestimonialImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => {
+                const newTestimonials = [...settings.testimonials];
+                newTestimonials[index].image = image;
+                setSettings(prev => ({ ...prev, testimonials: newTestimonials }));
+            });
+        }
+    };
+    
+    const handleUpsellImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
+                ...prev, upsellPage: { ...prev.upsellPage, imageUrl: image }
             })));
         }
     };
@@ -279,7 +309,20 @@ const AdminPage = () => {
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Título (Restante)</label><input type="text" value={settings.landingPage.heroTitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><input type="text" value={settings.landingPage.heroSubtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroSubtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Descrição</label><textarea value={settings.landingPage.heroDescription} onChange={(e) => handleInputChange(e, 'landingPage', 'heroDescription')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div>
-                                    <div><label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem Principal</label><input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Imagem Principal</label>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <img src={settings.landingPage.heroImage} alt="Hero preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>
+                                            <div className="flex-grow">
+                                                <label htmlFor="hero-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2 w-fit">
+                                                    <PencilIcon className="w-4 h-4" /> Trocar Imagem...
+                                                </label>
+                                                <input id="hero-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleHeroImageUpload} />
+                                                <label className="text-sm font-medium text-gray-300 mb-1 mt-2 block">ou cole a URL da imagem:</label>
+                                                <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2><div className="space-y-4">{settings.landingPage.beforeAndAfter.map((item, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveBeforeAfter(index)} title="Remover" className="absolute top-2 right-2 text-red-500 hover:text-red-400"><TrashIcon className="w-5 h-5"/></button><div className="grid md:grid-cols-3 gap-4 items-end"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome da Aluna</label><input type="text" value={item.name} onChange={(e) => handleBeforeAfterChange(e, index)} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"/></div><div><label htmlFor={`before-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Antes"</label><input id={`before-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'before')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div><div><label htmlFor={`after-img-${index}`} className="block text-sm font-medium text-gray-300 mb-1">Foto "Depois"</label><input id={`after-img-${index}`} type="file" accept="image/*" onChange={(e) => handleBeforeAfterImageUpload(e, index, 'after')} className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-brand/20 file:text-brand hover:file:bg-brand/30"/></div></div></div>))}</div><div className="mt-4"><button onClick={handleAddBeforeAfter} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Par Antes/Depois</button></div></div>
@@ -301,7 +344,20 @@ const AdminPage = () => {
                                         <div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                     )}
                                     {settings.upsellPage.mediaType === 'image' && (
-                                        <div><label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem</label><input type="text" value={settings.upsellPage.imageUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'imageUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300 mb-1">Imagem da Oferta</label>
+                                            <div className="flex items-center gap-4 mt-2">
+                                                 <img src={settings.upsellPage.imageUrl} alt="Upsell preview" className="w-48 h-auto rounded-lg object-cover bg-dark-700"/>
+                                                 <div className="flex-grow">
+                                                    <label htmlFor="upsell-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2 w-fit">
+                                                        <PencilIcon className="w-4 h-4" /> Trocar Imagem...
+                                                    </label>
+                                                    <input id="upsell-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleUpsellImageUpload} />
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 mt-2 block">ou cole a URL da imagem:</label>
+                                                    <input type="text" value={settings.upsellPage.imageUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'imageUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                 </div>
+                                            </div>
+                                        </div>
                                     )}
                                     {settings.upsellPage.mediaType === 'none' && (
                                         <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo (quando não há mídia)</label><textarea value={settings.upsellPage.subtitleNoMedia || ''} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitleNoMedia')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24" /></div>
@@ -319,7 +375,57 @@ const AdminPage = () => {
                                     )}
                                 </div>
                             </div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">URL da Imagem:</label><input type="text" value={testimonial.image} onChange={e => handleTestimonialChange(e, index, 'image')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Depoimentos</h2>
+                                <div className="space-y-6">
+                                    {settings.testimonials.map((testimonial, index) => (
+                                        <div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800">
+                                            <button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors">
+                                                <TrashIcon className="w-5 h-5"/>
+                                            </button>
+                                            <h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3>
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label>
+                                                    <input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">ID ou URL do Vídeo YouTube (Opcional):</label>
+                                                    <input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="block text-sm font-medium text-gray-300 mb-1">Imagem do Depoimento</label>
+                                                    <div className="flex items-center gap-4 mt-2">
+                                                        <img src={testimonial.image} alt="Testimonial preview" className="w-24 h-24 rounded-full object-cover bg-dark-700"/>
+                                                        <div className="flex-grow">
+                                                            <label htmlFor={`testimonial-image-upload-${index}`} className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2 w-fit">
+                                                                <PencilIcon className="w-4 h-4" /> Upload de Imagem...
+                                                            </label>
+                                                            <input id={`testimonial-image-upload-${index}`} type="file" className="sr-only" accept="image/*" onChange={(e) => handleTestimonialImageUpload(e, index)} />
+                                                            <label className="text-sm font-medium text-gray-300 mb-1 mt-2 block">ou cole a URL da imagem:</label>
+                                                            <input 
+                                                                type="text" 
+                                                                value={testimonial.image} 
+                                                                onChange={e => handleTestimonialChange(e, index, 'image')} 
+                                                                className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" 
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label>
+                                                    <textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6">
+                                    <button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors">
+                                        <PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     )}
                     {activeTab === 'settings' && (
