@@ -185,6 +185,21 @@ export type Database = {
         };
         Relationships: [];
       };
+      settings: {
+        Row: {
+          id: number;
+          config: any;
+        };
+        Insert: {
+          id: number;
+          config: any;
+        };
+        Update: {
+          id?: number;
+          config?: any;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;

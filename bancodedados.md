@@ -1,4 +1,3 @@
-
 # Guia de Banco de Dados e Hospedagem (Supabase + Vercel)
 
 Este guia foi criado para te ajudar a configurar e colocar seu aplicativo no ar, mesmo que você não tenha nenhum conhecimento de programação. Vamos usar duas ferramentas gratuitas e poderosas:
@@ -66,8 +65,7 @@ CREATE TABLE public.settings (
 );
 COMMENT ON TABLE public.settings IS 'Armazena as configurações globais do app (1 linha).';
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public read access to settings" ON public.settings FOR SELECT USING (true);
-CREATE POLICY "Allow admin update access to settings" ON public.settings FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Allow public access to settings" ON public.settings FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ========= INSERIR DADOS INICIAIS =========
