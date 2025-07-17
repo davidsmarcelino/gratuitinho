@@ -85,7 +85,7 @@ const BeforeAndAfterCard: React.FC<{ beforeImage: string, afterImage: string, na
 );
 
 
-const LandingPageHeader: React.FC<{ onCtaClick: () => void; showResultadosLink: boolean }> = ({ onCtaClick, showResultadosLink }) => {
+const LandingPageHeader: React.FC<{ onCtaClick: () => void; showResultadosLink: boolean; brandName: string; }> = ({ onCtaClick, showResultadosLink, brandName }) => {
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
         const element = document.getElementById(targetId);
@@ -100,7 +100,7 @@ const LandingPageHeader: React.FC<{ onCtaClick: () => void; showResultadosLink: 
     return (
         <header className="absolute top-0 left-0 right-0 z-20 p-4">
             <div className="container mx-auto flex justify-between items-center">
-                <h1 className="text-2xl font-bold font-heading">FitConsult</h1>
+                <h1 className="text-2xl font-bold font-heading">{brandName}</h1>
                 <nav className="hidden md:flex items-center space-x-8 text-sm">
                     <a href="#aulas" onClick={(e) => handleNavClick(e, 'aulas')} className="hover:text-brand transition-colors">Aulas</a>
                     {showResultadosLink && (
@@ -137,7 +137,7 @@ const LandingPage = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { heroTitleHighlight, heroTitle, heroSubtitle, heroDescription, heroImage } = state.settings.landingPage;
+    const { brandName, heroTitleHighlight, heroTitle, heroSubtitle, heroDescription, heroImage } = state.settings.landingPage;
     const { freeClassesSection } = state.settings;
     const icons = [MetabolismIcon, NutritionIcon, MindsetIcon];
 
@@ -197,7 +197,7 @@ const LandingPage = () => {
             } else {
                 // User does not exist, create new one.
                 // Create a payload for Supabase with a flat structure.
-                const userPayload: any = {
+                const userPayload = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,
@@ -266,7 +266,7 @@ const LandingPage = () => {
     
     return (
         <div className="bg-dark-900 overflow-x-hidden">
-            <LandingPageHeader onCtaClick={handleOpenRegModal} showResultadosLink={state.settings.landingPage.beforeAndAfter.length > 0} />
+            <LandingPageHeader brandName={brandName} onCtaClick={handleOpenRegModal} showResultadosLink={state.settings.landingPage.beforeAndAfter.length > 0} />
             
             <main>
                 {/* Hero Section */}

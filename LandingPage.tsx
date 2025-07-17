@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -208,7 +209,16 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([newUser] as any);
+                    .insert([
+                        {
+                            name: newUser.name,
+                            email: newUser.email,
+                            whatsapp: newUser.whatsapp,
+                            registrationDate: newUser.registrationDate,
+                            progress: newUser.progress,
+                            assessment: newUser.assessment,
+                        }
+                    ]);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation

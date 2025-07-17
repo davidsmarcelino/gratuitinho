@@ -59,6 +59,7 @@ export type FreeClassInfo = {
 
 export type AdminSettings = {
   landingPage: {
+    brandName: string;
     heroTitleHighlight: string;
     heroTitle: string;
     heroSubtitle: string;

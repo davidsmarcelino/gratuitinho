@@ -43,7 +43,7 @@ const DEFAULT_FREE_CLASSES: FreeClassInfo[] = [
     { title: "Aula 3: Mindset Vencedor", description: "Transforme sua mente para resultados duradouros.", features: ["Técnicas de motivação", "Hábitos duradouros"] },
 ];
 const INITIAL_SETTINGS: AdminSettings = {
-  landingPage: { heroTitleHighlight: 'Perca 15kg', heroTitle: 'em 90 Dias', heroSubtitle: 'Sem Dietas Restritivas', heroDescription: 'Descubra o método científico...', heroImage: 'https://i.imgur.com/gWahM2y.png', vslEnabled: false, beforeAndAfter: [] },
+  landingPage: { brandName: 'FitConsult', heroTitleHighlight: 'Perca 15kg', heroTitle: 'em 90 Dias', heroSubtitle: 'Sem Dietas Restritivas', heroDescription: 'Descubra o método científico...', heroImage: 'https://i.imgur.com/gWahM2y.png', vslEnabled: false, beforeAndAfter: [] },
   freeClassesSection: { title: '3 Aulas Gratuitas Que Vão Mudar Sua Vida', subtitle: 'Acesse nosso conteúdo exclusivo e comece sua transformação.', classes: DEFAULT_FREE_CLASSES },
   dashboard: { promoLinkText: 'Garanta com desconto consultoria VIP', promoLinkUrl: '/upsell' },
   coach: DEFAULT_COACH,
@@ -84,24 +84,41 @@ const MissingCredentialsWarning = () => (
     </div>
 );
 
+// Synchronously get initial state from localStorage for faster loads
+const getInitialState = (): AppState => {
+    let user: User | null = null;
+    try {
+        const storedUserJSON = localStorage.getItem('gratuitinho_user');
+        if (storedUserJSON) {
+            user = JSON.parse(storedUserJSON);
+        }
+    } catch (e) {
+        console.error("Failed to parse user from localStorage", e);
+        localStorage.removeItem('gratuitinho_user');
+    }
+
+    return {
+        user: user,
+        users: [],
+        settings: INITIAL_SETTINGS,
+        appStatus: 'loading',
+        syncStatus: 'idle',
+    };
+};
+
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [state, dispatch] = useReducer(appReducer, {
-    user: null, users: [], settings: INITIAL_SETTINGS, appStatus: 'loading', syncStatus: 'idle',
-  });
+  const [state, dispatch] = useReducer(appReducer, undefined, getInitialState);
 
   useEffect(() => {
     const loadInitialData = async () => {
       let loadedSettings = INITIAL_SETTINGS;
       try {
-        // Busca as configurações do Supabase como fonte primária.
         const { data: settingsData, error: settingsError } = await supabase.from('settings').select('config').eq('id', 1).single();
         if (settingsError) console.error("Erro ao buscar configs do Supabase, usando padrão:", settingsError.message);
         
         if (settingsData?.config) {
-            // Usa lodash.merge para fazer um deep merge, garantindo que novas chaves no código sejam adicionadas.
             loadedSettings = merge({}, INITIAL_SETTINGS, settingsData.config);
         } else {
-            // Se não encontrar no Supabase, tenta o localStorage como fallback.
             const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
             if (storedSettingsJSON) {
                 loadedSettings = merge({}, INITIAL_SETTINGS, JSON.parse(storedSettingsJSON));
@@ -130,13 +147,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             };
         });
         
-        const storedUserEmail = localStorage.getItem('gratuitinho_user_email');
-        const currentUser = storedUserEmail ? (users.find(u => u.email === storedUserEmail) || null) : null;
+        const currentUser = state.user ? (users.find(u => u.email === state.user!.email) || state.user) : null;
 
         dispatch({ type: 'SET_STATE', payload: { user: currentUser, users: users, settings: loadedSettings, appStatus: 'ready', syncStatus: 'idle' } });
       } catch (error) {
         console.error("Falha ao carregar usuários do Supabase", error);
-        dispatch({ type: 'SET_STATE', payload: { ...state, settings: loadedSettings, users: [], user: null, appStatus: 'ready' } });
+        dispatch({ type: 'SET_STATE', payload: { ...state, settings: loadedSettings, users: [], appStatus: 'ready' } });
       }
     };
 
@@ -149,45 +165,45 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const userJson = JSON.stringify(state.user);
   useEffect(() => {
-    if (areCredentialsMissing || state.appStatus !== 'ready' || !state.user) {
-      if (!state.user) localStorage.removeItem('gratuitinho_user_email');
-      return;
-    }
-    
-    const user = state.user;
-    localStorage.setItem('gratuitinho_user_email', user.email);
-       
-    const syncUser = async () => {
-        dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-        const userPayload: any = {
-            name: user.name, email: user.email, whatsapp: user.whatsapp,
-            registrationDate: user.registrationDate, progress: user.progress,
-            assessment_age: user.assessment?.age ?? null, assessment_height: user.assessment?.height ?? null,
-            assessment_weight: user.assessment?.weight ?? null, assessment_activity_level: user.assessment?.activityLevel ?? null,
-            assessment_goal: user.assessment?.goal ?? null, assessment_sleep_quality: user.assessment?.sleepQuality ?? null,
-            assessment_food_quality: user.assessment?.foodQuality ?? null, assessment_training_location: user.assessment?.trainingLocation ?? null,
-            assessment_imc: user.assessment?.imc ?? null, assessment_ideal_weight: user.assessment?.idealWeight ?? null,
+    if (state.appStatus !== 'ready') return;
+
+    if (state.user) {
+        localStorage.setItem('gratuitinho_user', JSON.stringify(state.user));
+        
+        const syncUser = async () => {
+            if (areCredentialsMissing) return;
+            dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
+            const user = state.user!;
+            const userPayload = {
+                name: user.name, email: user.email, whatsapp: user.whatsapp,
+                registrationDate: user.registrationDate, progress: user.progress,
+                assessment_age: user.assessment?.age ?? null, assessment_height: user.assessment?.height ?? null,
+                assessment_weight: user.assessment?.weight ?? null, assessment_activity_level: user.assessment?.activityLevel ?? null,
+                assessment_goal: user.assessment?.goal ?? null, assessment_sleep_quality: user.assessment?.sleepQuality ?? null,
+                assessment_food_quality: user.assessment?.foodQuality ?? null, assessment_training_location: user.assessment?.trainingLocation ?? null,
+                assessment_imc: user.assessment?.imc ?? null, assessment_ideal_weight: user.assessment?.idealWeight ?? null,
+            };
+            const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
+            if (error) {
+                console.error('Erro ao salvar dados do usuário no Supabase:', error);
+                dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
+            } else {
+                dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });
+                setTimeout(() => dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' }), 2000);
+            }
         };
-        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
-        if (error) {
-            console.error('Erro ao salvar dados do usuário no Supabase:', error);
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
-        } else {
-            dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });
-            setTimeout(() => dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' }), 2000);
-        }
-    };
-    syncUser();
+        syncUser();
+    } else {
+        localStorage.removeItem('gratuitinho_user');
+    }
   }, [userJson, state.appStatus]);
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
-    localStorage.removeItem('gratuitinho_user_email');
   }, []);
 
   const saveSettings = useCallback(async (newSettings: AdminSettings) => {
     if(areCredentialsMissing) {
-        // Salva apenas localmente se as credenciais não estiverem configuradas
         console.warn("Credenciais do Supabase ausentes. Salvando configurações apenas localmente.");
         dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
         localStorage.setItem('gratuitinho_settings', JSON.stringify(newSettings));
@@ -199,7 +215,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
       localStorage.setItem('gratuitinho_settings', JSON.stringify(newSettings));
       
-      const updatePayload: any = { config: newSettings, updated_at: new Date().toISOString() };
+      const updatePayload = { config: newSettings, updated_at: new Date().toISOString() };
       const { error } = await supabase
         .from('settings')
         .update(updatePayload)
@@ -212,7 +228,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {
       console.error('Erro ao salvar configurações no Supabase:', e);
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
-      throw e; // Propaga o erro para o componente que chamou
+      throw e;
     }
   }, []);
 
@@ -222,7 +238,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   return (
     <AppContext.Provider value={{ state, dispatch, logout, saveSettings }}>
-      {state.appStatus === 'loading' ? <div className="h-screen w-full flex items-center justify-center bg-dark-900"><div className="text-brand text-xl">Carregando...</div></div> : children}
+      {state.appStatus === 'loading' && !state.user ? <div className="h-screen w-full flex items-center justify-center bg-dark-900"><div className="text-brand text-xl">Carregando...</div></div> : children}
     </AppContext.Provider>
   );
 };

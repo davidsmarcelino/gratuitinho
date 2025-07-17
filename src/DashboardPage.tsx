@@ -13,7 +13,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
     const { state, dispatch } = useApp();
     const [feedback, setFeedback] = useState<string | null>(null);
     const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
-    const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    const geminiApiKey = import.meta.env.VITE_AI_FEEDBACK_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -39,7 +39,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
         dispatch({ type: 'UPDATE_ASSESSMENT', payload: assessmentData });
         
         if (!geminiApiKey) {
-            console.error("VITE_GEMINI_API_KEY is not configured.");
+            console.error("Chave da API do Google Gemini não configurada. Verifique as variáveis de ambiente VITE_AI_FEEDBACK_API_KEY ou VITE_GEMINI_API_KEY.");
             const fallbackText = `Olá, ${state.user?.name}! Recebemos sua avaliação. Estamos muito animadas para começar esta jornada com você e te ajudar a alcançar seu objetivo. Sua primeira aula já está liberada. Vamos com tudo!`;
             setFeedback(fallbackText);
             setIsGeneratingFeedback(false);
@@ -67,36 +67,39 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
                 outro: 'Outro local (ar livre, etc)'
             };
 
-            const prompt = `
-                Você é a "FitConsult AI", uma coach de fitness virtual para mulheres. Seu tom é motivador, empático e positivo. Use frases curtas e diretas.
+            const systemInstruction = `Você é a "FitConsult AI", uma coach de fitness virtual para mulheres. Seu tom é motivador, empático e positivo. Use frases curtas e diretas.
+Gere uma mensagem de boas-vindas e análise para a aluna. A mensagem deve:
+1. Cumprimentar a aluna pelo nome.
+2. Fazer uma análise encorajadora baseada nos dados, mencionando o local de treino para personalizar a dica e focar no potencial de melhoria.
+3. Fazer duas perguntas curtas para reflexão baseadas nos dados de menor pontuação (sono ou alimentação), para incentivar o engajamento.
+4. Terminar com uma frase inspiradora e dizer que a primeira aula está liberada.
+Siga exatamente o formato do exemplo abaixo, usando quebras de linha para separar os parágrafos e as perguntas.
 
-                A aluna ${state.user?.name} preencheu uma avaliação:
+Exemplo de estrutura:
+Olá, [Nome da Aluna]! Parabéns por dar este passo! [Análise encorajadora].
+
+Para começar, que tal refletir:
+- [Pergunta 1 sobre ponto de melhoria]?
+- [Pergunta 2 sobre outro ponto de melhoria]?
+
+[Frase inspiradora]. Sua primeira aula já está liberada!`;
+
+            const userPrompt = `
+                Gere a mensagem para a aluna ${state.user?.name} com base na seguinte avaliação:
                 - Objetivo: ${goalMap[assessmentData.goal]}
                 - Local de Treino: ${trainingLocationMap[assessmentData.trainingLocation]}
                 - Nível de Atividade: ${activityMap[assessmentData.activityLevel]}
                 - Qualidade do Sono: ${assessmentData.sleepQuality}/5
                 - Qualidade da Alimentação: ${assessmentData.foodQuality}/5
                 - IMC: ${assessmentData.imc.toFixed(1)}
-
-                Gere uma mensagem de boas-vindas e análise (máximo de 4-5 frases). A mensagem deve:
-                1. Cumprimentar a aluna pelo nome.
-                2. Fazer uma análise encorajadora baseada nos dados, mencionando o local de treino para personalizar a dica, e focando no potencial de melhoria.
-                3. Fazer duas perguntas curtas para reflexão baseadas nos dados de menor pontuação (sono ou alimentação).
-                4. Terminar com uma frase inspiradora e dizer que a primeira aula está liberada.
-
-                Exemplo de como estruturar sua resposta (use quebras de linha):
-                Olá, Maria! Parabéns por dar este passo! Seus dados mostram que seu objetivo é emagrecer e você treina em casa, o que é ótimo para criar consistência. Com foco na melhoria da sua alimentação, você verá resultados incríveis.
-
-                Para começar, que tal refletir:
-                - Qual pequena troca alimentar você poderia fazer esta semana?
-                - O que você acredita que mais impacta sua qualidade de sono hoje?
-
-                Estou animada para começar com você. Sua primeira aula já está liberada!
             `;
             
             const response = await ai.models.generateContent({
                 model: 'gemini-2.5-flash',
-                contents: prompt,
+                contents: userPrompt,
+                config: {
+                    systemInstruction: systemInstruction,
+                },
             });
 
             const feedbackText = response.text;

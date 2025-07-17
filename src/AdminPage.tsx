@@ -306,8 +306,18 @@ const AdminPage = () => {
                     {activeTab === 'content' && (
                         <div className="space-y-8">
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
-                                <h2 className="text-2xl font-bold mb-4">Landing Page - Hero Section</h2>
+                                <h2 className="text-2xl font-bold mb-4">Landing Page - Cabeçalho e Hero</h2>
                                 <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Nome da Marca (cabeçalho)</label>
+                                        <input
+                                            type="text"
+                                            value={settings.landingPage.brandName || ''}
+                                            onChange={(e) => handleInputChange(e, 'landingPage', 'brandName')}
+                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2"
+                                            placeholder="Ex: FitConsult. Deixe em branco para remover."
+                                        />
+                                    </div>
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Título (Destaque Laranja)</label><input type="text" value={settings.landingPage.heroTitleHighlight} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitleHighlight')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Título (Restante)</label><input type="text" value={settings.landingPage.heroTitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
                                     <div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><input type="text" value={settings.landingPage.heroSubtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroSubtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div>
