@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial, Database } from './types.ts';
+import { User, Testimonial } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -201,7 +202,7 @@ const LandingPage = () => {
                     email: formData.email,
                     whatsapp: formData.whatsapp,
                     registrationDate: new Date().toISOString(),
-                    progress: [],
+                    progress: [] as number[],
                     assessment_age: null,
                     assessment_height: null,
                     assessment_weight: null,
@@ -231,7 +232,7 @@ const LandingPage = () => {
                     email: formData.email,
                     whatsapp: formData.whatsapp,
                     registrationDate: userPayload.registrationDate,
-                    progress: [],
+                    progress: [] as number[],
                     assessment: null,
                 };
                 
