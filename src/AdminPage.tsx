@@ -121,6 +121,16 @@ const AdminPage = () => {
         }
     };
 
+    const handleLessonThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => {
+                const newLessons = [...settings.lessons];
+                newLessons[index].thumbnail = image;
+                setSettings(prev => ({ ...prev, lessons: newLessons }));
+            });
+        }
+    };
+
     const handleTestimonialImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         if (e.target.files?.[0]) {
             handleImageUpload(e.target.files[0], (image) => {
@@ -209,12 +219,36 @@ const AdminPage = () => {
                     {activeTab === 'users' && (
                         <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
                             <button onClick={() => exportToCSV(state.users, state.settings.lessons)} className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mb-4">Exportar para CSV</button>
-                            <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-400"><thead className="text-xs text-gray-300 uppercase bg-dark-700"><tr><th className="px-6 py-3">Nome</th><th className="px-6 py-3">Contato</th><th className="px-6 py-3 w-48">Progresso</th><th className="px-6 py-3">IMC</th><th className="px-6 py-3">Objetivo</th><th className="px-6 py-3">Nível Ativ.</th><th className="px-6 py-3">Sono</th><th className="px-6 py-3">Aliment.</th></tr></thead><tbody>{state.users.map(user => {const progressPercent = freeLessons.length > 0 ? (user.progress.length / freeLessons.length) * 100 : 0; const tooltipText = `Aulas Concluídas (${user.progress.length}/${freeLessons.length}):\n${freeLessons.filter(l => user.progress.includes(l.id)).map(l => `• ${l.title}`).join('\n') || 'Nenhuma'}`; return (<tr key={user.email} className="bg-dark-800 border-b border-gray-700 hover:bg-dark-700/50"><td className="px-6 py-4 font-medium text-white whitespace-nowrap">{user.name}</td><td className="px-6 py-4">{user.email}<br/>{user.whatsapp}</td><td className="px-6 py-4"><div className="flex items-center gap-3"><MiniProgressBar percentage={progressPercent} tooltip={tooltipText} /><span className="font-medium text-white">{progressPercent.toFixed(0)}%</span></div></td><td className="px-6 py-4">{user.assessment?.imc ? user.assessment.imc.toFixed(2) : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? assessmentLabels.goal[user.assessment.goal] : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? assessmentLabels.activityLevel[user.assessment.activityLevel] : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? `${user.assessment.sleepQuality}/5` : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? `${user.assessment.foodQuality}/5` : 'N/A'}</td></tr>);})}</tbody></table></div>
+                            <div className="overflow-x-auto"><table className="w-full text-sm text-left text-gray-400"><thead className="text-xs text-gray-300 uppercase bg-dark-700"><tr><th className="px-6 py-3">Nome</th><th className="px-6 py-3">Email</th><th className="px-6 py-3">WhatsApp</th><th className="px-6 py-3 w-48">Progresso</th><th className="px-6 py-3">IMC</th><th className="px-6 py-3">Objetivo</th><th className="px-6 py-3">Nível Ativ.</th><th className="px-6 py-3">Sono</th><th className="px-6 py-3">Aliment.</th></tr></thead><tbody>{state.users.map(user => {const progressPercent = freeLessons.length > 0 ? (user.progress.length / freeLessons.length) * 100 : 0; const tooltipText = `Aulas Concluídas (${user.progress.length}/${freeLessons.length}):\n${freeLessons.filter(l => user.progress.includes(l.id)).map(l => `• ${l.title}`).join('\n') || 'Nenhuma'}`; return (<tr key={user.email} className="bg-dark-800 border-b border-gray-700 hover:bg-dark-700/50"><td className="px-6 py-4 font-medium text-white whitespace-nowrap">{user.name}</td><td className="px-6 py-4">{user.email}</td><td className="px-6 py-4">{user.whatsapp}</td><td className="px-6 py-4"><div className="flex items-center gap-3"><MiniProgressBar percentage={progressPercent} tooltip={tooltipText} /><span className="font-medium text-white">{progressPercent.toFixed(0)}%</span></div></td><td className="px-6 py-4">{user.assessment?.imc ? user.assessment.imc.toFixed(2) : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? assessmentLabels.goal[user.assessment.goal] : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? assessmentLabels.activityLevel[user.assessment.activityLevel] : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? `${user.assessment.sleepQuality}/5` : 'N/A'}</td><td className="px-6 py-4">{user.assessment ? `${user.assessment.foodQuality}/5` : 'N/A'}</td></tr>);})}</tbody></table></div>
                         </div>
                     )}
                     {activeTab === 'lessons' && (
                         <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
-                            <h2 className="text-2xl font-bold mb-4">Aulas Gratuitas e VIP</h2><div className="space-y-6">{settings.lessons.map((lesson, index) => (<div key={lesson.id} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveLesson(index)} title="Remover Aula" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5" /></button><h3 className="font-bold text-lg mb-2 flex items-center gap-2">{lesson.isVip && <span className="text-xs bg-yellow-400 text-dark-900 font-bold px-2 py-1 rounded-full">VIP</span>} Aula {index + 1}: {lesson.title}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Título:</label><input type="text" value={lesson.title} onChange={e => handleLessonChange(e, index, 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube:</label><input type="text" value={lesson.videoId} onChange={e => handleLessonChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Descrição:</label><textarea value={lesson.description} onChange={e => handleLessonChange(e, index, 'description')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">URL da Thumbnail:</label><input type="text" value={lesson.thumbnail} onChange={e => handleLessonChange(e, index, 'thumbnail')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="flex items-center gap-4"><label className="text-sm font-medium text-gray-300">É VIP?</label><input type="checkbox" checked={lesson.isVip} onChange={e => handleLessonChange(e, index, 'isVip')} className="h-4 w-4 text-brand bg-gray-700 border-gray-600 rounded focus:ring-brand" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddLesson} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Nova Aula</button></div>
+                            <h2 className="text-2xl font-bold mb-4">Aulas Gratuitas e VIP</h2><div className="space-y-6">{settings.lessons.map((lesson, index) => (<div key={lesson.id} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveLesson(index)} title="Remover Aula" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5" /></button><h3 className="font-bold text-lg mb-2 flex items-center gap-2">{lesson.isVip && <span className="text-xs bg-yellow-400 text-dark-900 font-bold px-2 py-1 rounded-full">VIP</span>} Aula {index + 1}: {lesson.title}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Título:</label><input type="text" value={lesson.title} onChange={e => handleLessonChange(e, index, 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube:</label><input type="text" value={lesson.videoId} onChange={e => handleLessonChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Descrição:</label><textarea value={lesson.description} onChange={e => handleLessonChange(e, index, 'description')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div>
+                            <div>
+                                <label className="text-sm font-medium text-gray-300 mb-1 block">Thumbnail da Aula</label>
+                                <div className="flex items-center gap-2 mb-2">
+                                    <img src={lesson.thumbnail} alt="Thumbnail Preview" className="w-24 h-14 rounded-lg object-cover bg-dark-700"/>
+                                    <input 
+                                        type="text" 
+                                        value={lesson.thumbnail} 
+                                        onChange={e => handleLessonChange(e, index, 'thumbnail')} 
+                                        className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 text-xs" 
+                                        placeholder="Cole a URL da thumbnail aqui"
+                                    />
+                                </div>
+                                <label htmlFor={`lesson-thumb-upload-${index}`} className="text-xs cursor-pointer text-brand-light hover:text-brand">
+                                    Ou envie do computador...
+                                </label>
+                                <input 
+                                    id={`lesson-thumb-upload-${index}`} 
+                                    type="file" 
+                                    accept="image/*" 
+                                    onChange={(e) => handleLessonThumbnailUpload(e, index)} 
+                                    className="sr-only"
+                                />
+                            </div>
+                            <div className="flex items-center gap-4"><label className="text-sm font-medium text-gray-300">É VIP?</label><input type="checkbox" checked={lesson.isVip} onChange={e => handleLessonChange(e, index, 'isVip')} className="h-4 w-4 text-brand bg-gray-700 border-gray-600 rounded focus:ring-brand" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddLesson} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Nova Aula</button></div>
                         </div>
                     )}
                     {activeTab === 'content' && (
@@ -251,8 +285,33 @@ const AdminPage = () => {
                                         <textarea value={settings.landingPage.heroDescription} onChange={(e) => handleInputChange(e, 'landingPage', 'heroDescription')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea>
                                     </div>
                                     <div className="md:col-span-2">
-                                        <label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem do Hero</label>
-                                        <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Imagem do Hero</label>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <img src={settings.landingPage.heroImage} alt="Hero Preview" className="w-24 h-auto max-h-24 rounded-lg object-cover bg-dark-700"/>
+                                            <input 
+                                                type="text" 
+                                                value={settings.landingPage.heroImage} 
+                                                onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} 
+                                                className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 text-xs" 
+                                                placeholder="Cole a URL da imagem aqui"
+                                            />
+                                        </div>
+                                        <label htmlFor="hero-image-upload" className="text-xs cursor-pointer text-brand-light hover:text-brand">
+                                            Ou envie do computador...
+                                        </label>
+                                        <input 
+                                            id="hero-image-upload" 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => {
+                                                if (e.target.files?.[0]) {
+                                                    handleImageUpload(e.target.files[0], (image) => setSettings(prev => ({
+                                                        ...prev, landingPage: { ...prev.landingPage, heroImage: image }
+                                                    })));
+                                                }
+                                            }}
+                                            className="sr-only"
+                                        />
                                     </div>
                                     
                                     <div className="md:col-span-2 pt-4 border-t border-gray-700">
