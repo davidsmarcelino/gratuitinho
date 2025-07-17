@@ -288,7 +288,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        const userPayload: Database['public']['Tables']['users']['Insert'] = {
+        const userPayload = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,

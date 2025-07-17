@@ -196,7 +196,7 @@ const LandingPage = () => {
             } else {
                 // User does not exist, create new one.
                 // Create a payload for Supabase with a flat structure.
-                const userPayload: Database['public']['Tables']['users']['Insert'] = {
+                const userPayload = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,

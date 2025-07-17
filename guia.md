@@ -116,14 +116,14 @@ Esta é a sua área de gerenciamento. Para acessar, visite `[URL_DO_SEU_APP]/#/a
 *   **Configurações Gerais:**
     *   *Tempo de Acesso Gratuito:* Usado em `src/DashboardPage.tsx` para calcular o tempo restante no `CountdownTimer` e em `src/App.tsx` para redirecionar para a página de upsell quando o tempo expira.
 *   **Conteúdo da Landing Page:**
-    *   *Título e Subtítulo:* Exibidos no topo do `src/LandingPage.tsx`.
+    *   *Título, Subtítulo e Imagem Principal (Hero):* Exibidos no topo do `src/LandingPage.tsx`. A imagem pode ser carregada do seu computador ou inserida via URL.
 *   **Seção "Conheça o Treinador":**
     *   *Nome, Imagem, Bio, Certificações:* Todos esses dados são exibidos na seção "CONHEÇA SEU TREINADOR" no `src/LandingPage.tsx`.
 *   **Aulas Gratuitas e VIP:**
-    *   *Título, ID do Vídeo, Descrição, Thumbnail:* Usados para construir os `LessonCard` no `src/DashboardPage.tsx`.
+    *   *Título, ID do Vídeo, Descrição, Thumbnail:* Usados para construir os `LessonCard` no `src/DashboardPage.tsx`. A imagem de thumbnail pode ser carregada do seu computador ou inserida via URL.
 *   **Depoimentos:**
     *   *Nome, Imagem, Texto, Vídeo:* Usados para construir os `TestimonialCard` no `src/LandingPage.tsx`.
 *   **Gerenciar Alunos:**
-    *   A tabela é preenchida com os dados de todas as usuárias que estão no `src/context.tsx`.
+    *   A tabela lista todas as alunas com seus dados principais, como nome, e-mail, WhatsApp e progresso nas aulas.
 
 Com este guia, você tem total autonomia para gerenciar e evoluir seu aplicativo. Boas vendas!
