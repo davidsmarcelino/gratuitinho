@@ -16,10 +16,9 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
     const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
     const geminiApiKey = import.meta.env.VITE_AI_FEEDBACK_API_KEY || import.meta.env.VITE_GEMINI_API_KEY;
 
-    const generateFallbackFeedback = () => {
+    const getFallbackFeedback = () => {
         const fallbackTemplate = state.settings.ai?.assessmentFeedbackFallback || 'Olá, {name}! Recebemos sua avaliação. Estamos muito animadas para começar esta jornada com você e te ajudar a alcançar seu objetivo. Sua primeira aula já está liberada. Vamos com tudo!';
-        const fallbackText = fallbackTemplate.replace(/{name}/g, state.user?.name || 'aluna');
-        setFeedback(fallbackText);
+        return fallbackTemplate.replace(/{name}/g, state.user?.name || 'aluna');
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -30,7 +29,7 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
         const formData = new FormData(e.currentTarget);
         const data = Object.fromEntries(formData.entries());
 
-        const assessmentData: AssessmentData = {
+        const baseAssessmentData: Omit<AssessmentData, 'feedback'> = {
             age: Number(data.age),
             height: Number(data.height),
             weight: Number(data.weight),
@@ -43,81 +42,58 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
             idealWeight: calculateIdealWeight(Number(data.height)),
         };
 
-        dispatch({ type: 'UPDATE_ASSESSMENT', payload: assessmentData });
-        
+        let finalFeedback: string;
+
         if (!geminiApiKey) {
-            console.error("Chave da API do Google Gemini não configurada. Verifique as variáveis de ambiente VITE_AI_FEEDBACK_API_KEY ou VITE_GEMINI_API_KEY.");
-            generateFallbackFeedback();
-            setIsGeneratingFeedback(false);
-            return;
-        }
+            console.error("Chave da API do Google Gemini não configurada. Usando fallback.");
+            finalFeedback = getFallbackFeedback();
+        } else {
+            try {
+                const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
-        try {
-            const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+                const goalMap = { emagrecer: 'Emagrecer', definir: 'Definir o corpo', ganhar_massa: 'Ganhar massa muscular' };
+                const activityMap = { sedentaria: 'Sedentária', ativa: 'Ativa', muito_ativa: 'Muito ativa' };
+                const trainingLocationMap = { casa: 'Em casa', academia: 'Na academia', outro: 'Outro local (ar livre, etc)' };
 
-            const goalMap = {
-                emagrecer: 'Emagrecer',
-                definir: 'Definir o corpo',
-                ganhar_massa: 'Ganhar massa muscular'
-            };
+                const prompt = `
+                    Você é a "FitConsult AI", uma coach de fitness virtual para mulheres. Seu tom é motivador, empático e positivo. Use frases curtas e diretas.
+                    A aluna ${state.user?.name} preencheu uma avaliação:
+                    - Objetivo: ${goalMap[baseAssessmentData.goal]}
+                    - Local de Treino: ${trainingLocationMap[baseAssessmentData.trainingLocation]}
+                    - Nível de Atividade: ${activityMap[baseAssessmentData.activityLevel]}
+                    - Qualidade do Sono: ${baseAssessmentData.sleepQuality}/5
+                    - Qualidade da Alimentação: ${baseAssessmentData.foodQuality}/5
+                    - IMC: ${baseAssessmentData.imc.toFixed(1)}
+                    Gere uma mensagem de boas-vindas e análise (máximo de 4-5 frases). A mensagem deve:
+                    1. Cumprimentar a aluna pelo nome.
+                    2. Fazer uma análise encorajadora baseada nos dados, mencionando o local de treino para personalizar a dica, e focando no potencial de melhoria.
+                    3. Fazer duas perguntas curtas para reflexão baseadas nos dados de menor pontuação (sono ou alimentação).
+                    4. Terminar com uma frase inspiradora e dizer que a primeira aula está liberada.
+                `;
+                
+                const response = await ai.models.generateContent({ model: 'gemini-2.5-flash', contents: prompt });
+                const aiText = response.text;
 
-            const activityMap = {
-                sedentaria: 'Sedentária',
-                ativa: 'Ativa',
-                muito_ativa: 'Muito ativa'
-            };
-            
-            const trainingLocationMap = {
-                casa: 'Em casa',
-                academia: 'Na academia',
-                outro: 'Outro local (ar livre, etc)'
-            };
+                if (aiText && aiText.trim()) {
+                    finalFeedback = aiText;
+                } else {
+                    throw new Error("A IA retornou uma resposta vazia.");
+                }
 
-            const prompt = `
-                Você é a "FitConsult AI", uma coach de fitness virtual para mulheres. Seu tom é motivador, empático e positivo. Use frases curtas e diretas.
-
-                A aluna ${state.user?.name} preencheu uma avaliação:
-                - Objetivo: ${goalMap[assessmentData.goal]}
-                - Local de Treino: ${trainingLocationMap[assessmentData.trainingLocation]}
-                - Nível de Atividade: ${activityMap[assessmentData.activityLevel]}
-                - Qualidade do Sono: ${assessmentData.sleepQuality}/5
-                - Qualidade da Alimentação: ${assessmentData.foodQuality}/5
-                - IMC: ${assessmentData.imc.toFixed(1)}
-
-                Gere uma mensagem de boas-vindas e análise (máximo de 4-5 frases). A mensagem deve:
-                1. Cumprimentar a aluna pelo nome.
-                2. Fazer uma análise encorajadora baseada nos dados, mencionando o local de treino para personalizar a dica, e focando no potencial de melhoria.
-                3. Fazer duas perguntas curtas para reflexão baseadas nos dados de menor pontuação (sono ou alimentação).
-                4. Terminar com uma frase inspiradora e dizer que a primeira aula está liberada.
-
-                Exemplo de como estruturar sua resposta (use quebras de linha):
-                Olá, Maria! Parabéns por dar este passo! Seus dados mostram que seu objetivo é emagrecer e você treina em casa, o que é ótimo para criar consistência. Com foco na melhoria da sua alimentação, você verá resultados incríveis.
-
-                Para começar, que tal refletir:
-                - Qual pequena troca alimentar você poderia fazer esta semana?
-                - O que você acredita que mais impacta sua qualidade de sono hoje?
-
-                Estou animada para começar com você. Sua primeira aula já está liberada!
-            `;
-            
-            const response = await ai.models.generateContent({
-                model: 'gemini-2.5-flash',
-                contents: prompt,
-            });
-
-            const feedbackText = response.text;
-            if (feedbackText && feedbackText.trim()) {
-                setFeedback(feedbackText);
-            } else {
-                throw new Error("A IA retornou uma resposta vazia.");
+            } catch (error) {
+                console.error("Error generating feedback with AI:", error);
+                finalFeedback = getFallbackFeedback();
             }
-
-        } catch (error) {
-            console.error("Error generating feedback with AI:", error);
-            generateFallbackFeedback();
-        } finally {
-            setIsGeneratingFeedback(false);
         }
+        
+        const completeAssessmentData: AssessmentData = {
+            ...baseAssessmentData,
+            feedback: finalFeedback,
+        };
+
+        setFeedback(finalFeedback);
+        dispatch({ type: 'UPDATE_ASSESSMENT', payload: completeAssessmentData });
+        setIsGeneratingFeedback(false);
     };
     
     const sleepLabels = ["Muito Ruim", "Ruim", "Regular", "Boa", "Excelente"];
@@ -239,6 +215,24 @@ const AccessTimerInfo: React.FC<{ registrationDate: string; freeAccessDays: numb
     );
 };
 
+const AssessmentFeedbackBanner: React.FC<{ assessment: AssessmentData; onDismiss: () => void }> = ({ assessment, onDismiss }) => {
+    if (!assessment.feedback) return null;
+
+    return (
+        <div className="bg-dark-900/50 border border-brand/50 rounded-lg p-6 mb-8 relative shadow-lg">
+            <button 
+                onClick={onDismiss} 
+                className="absolute top-3 right-3 text-gray-400 hover:text-white text-2xl leading-none"
+                aria-label="Fechar feedback"
+            >
+                &times;
+            </button>
+            <h3 className="text-xl font-bold font-heading text-brand mb-3">Sua Análise Personalizada</h3>
+            <p className="text-gray-300 whitespace-pre-line">{assessment.feedback}</p>
+        </div>
+    );
+};
+
 const SyncStatusIndicator = () => {
     const { state } = useApp();
     const { syncStatus } = state;
@@ -275,6 +269,8 @@ const DashboardPage = () => {
     const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
     const [isUpsellModalOpen, setIsUpsellModalOpen] = useState(false);
     const [isAssessmentModalOpen, setAssessmentModalOpen] = useState(false);
+    const [showFeedbackBanner, setShowFeedbackBanner] = useState(true);
+
 
     useEffect(() => {
         if (!state.user) {
@@ -407,6 +403,12 @@ const DashboardPage = () => {
                     <AssessmentPrompt onStart={() => setAssessmentModalOpen(true)} />
                 ) : (
                     <>
+                        {user.assessment.feedback && showFeedbackBanner && (
+                            <AssessmentFeedbackBanner 
+                                assessment={user.assessment} 
+                                onDismiss={() => setShowFeedbackBanner(false)}
+                            />
+                        )}
                         <WelcomeBanner />
                         <AccessTimerInfo registrationDate={user.registrationDate} freeAccessDays={state.settings.freeAccessDays} />
                         
@@ -452,7 +454,7 @@ const DashboardPage = () => {
                 onClose={() => setIsUpsellModalOpen(false)}
             />
             
-            <Modal isOpen={isAssessmentModalOpen && !user.assessment} onClose={() => setAssessmentModalOpen(false)} size="2xl">
+            <Modal isOpen={isAssessmentModalOpen} onClose={() => setAssessmentModalOpen(false)} size="2xl">
                 <AssessmentForm onComplete={() => setAssessmentModalOpen(false)} />
             </Modal>
         </div>

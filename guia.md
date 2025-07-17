@@ -1,4 +1,3 @@
-
 # Guia Completo do Aplicativo FitConsult
 
 Olá! Este documento é um guia para te ajudar a entender e gerenciar todas as partes do seu aplicativo de fitness, mesmo que você não entenda de programação. Ele foi feito para que você possa encontrar facilmente onde alterar textos, imagens, aulas e outras configurações, e também para saber quais arquivos de código são responsáveis por cada funcionalidade.
@@ -87,15 +86,17 @@ Esta é a área exclusiva para alunas cadastradas.
 
 ### 5. Página de Oferta (Upsell)
 
-Esta página é mostrada para vender seu programa completo.
+Esta página é mostrada para vender seu programa completo. Ela é altamente customizável pelo painel de admin.
 
 *   **Funcionalidades e Botões:**
-    *   **Vídeo de Vendas:** Um player do YouTube (`iframe`) que é carregado com o link que você define no painel de admin.
-    *   **Botão "QUERO ENTRAR AGORA":** O principal `CTAButton` da página, que futuramente irá redirecionar para o seu link de checkout.
+    *   **Mídia Principal:** Você pode escolher entre exibir um **Vídeo de Vendas** do YouTube, uma **Imagem de Oferta** ou **Nenhum** elemento visual. O layout se adapta automaticamente.
+    *   **Textos Adaptáveis:** Se você escolher não usar mídia, pode definir um subtítulo alternativo para que a página não fique com um espaço vazio.
+    *   **Preço e Parcelamento:** Você pode definir o preço cheio, o preço promocional e habilitar/desabilitar a opção de parcelamento, definindo o número de parcelas e o valor de cada uma.
+    *   **Botão "QUERO ENTRAR AGORA":** O principal `CTAButton` da página, que redireciona para o link de checkout que você definir no painel de admin.
 
 *   **Localização no Código:**
-    *   **Estrutura e Conteúdo:** `src/UpsellPage.tsx` é o arquivo que monta esta página.
-    *   **Edição do Conteúdo:** O link do vídeo e os textos de preço são gerenciados por você no `src/AdminPage.tsx`.
+    *   **Estrutura e Conteúdo:** `src/UpsellPage.tsx` é o arquivo que monta esta página dinamicamente com base nas suas configurações.
+    *   **Edição do Conteúdo:** Todas as opções (mídia, textos, preços, parcelamento e link de checkout) são gerenciadas por você na seção "Página de Upsell" da aba "Conteúdo" do `src/AdminPage.tsx`.
 
 ---
 

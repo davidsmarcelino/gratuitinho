@@ -1,3 +1,4 @@
+
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, Database } from './types.ts';
@@ -232,6 +233,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 trainingLocation: dbUser.assessment_training_location!,
                 imc: dbUser.assessment_imc!,
                 idealWeight: dbUser.assessment_ideal_weight!,
+                feedback: dbUser.assessment_feedback,
             } : null;
 
             return {
@@ -288,7 +290,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        const userPayload = {
+        const userPayload: Database['public']['Tables']['users']['Insert'] = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,
@@ -304,6 +306,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment_training_location: user.assessment?.trainingLocation ?? null,
             assessment_imc: user.assessment?.imc ?? null,
             assessment_ideal_weight: user.assessment?.idealWeight ?? null,
+            assessment_feedback: user.assessment?.feedback ?? null,
         };
         
         const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });

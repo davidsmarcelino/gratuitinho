@@ -20,6 +20,7 @@ export type AssessmentData = {
   trainingLocation: 'casa' | 'academia' | 'outro';
   imc: number;
   idealWeight: string;
+  feedback?: string | null;
 };
 
 export type Lesson = {
@@ -144,6 +145,7 @@ export interface Database {
           assessment_training_location: 'casa' | 'academia' | 'outro' | null;
           assessment_imc: number | null;
           assessment_ideal_weight: string | null;
+          assessment_feedback: string | null;
         };
         Insert: {
           name: string;
@@ -161,6 +163,7 @@ export interface Database {
           assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
           assessment_imc?: number | null;
           assessment_ideal_weight?: string | null;
+          assessment_feedback?: string | null;
         };
         Update: {
           name?: string;
@@ -178,6 +181,7 @@ export interface Database {
           assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
           assessment_imc?: number | null;
           assessment_ideal_weight?: string | null;
+          assessment_feedback?: string | null;
         };
       };
     };

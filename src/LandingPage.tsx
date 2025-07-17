@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial } from './types.ts';
+import { User, Testimonial, Database } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -182,6 +182,7 @@ const LandingPage = () => {
                     trainingLocation: existingUser.assessment_training_location!,
                     imc: existingUser.assessment_imc!,
                     idealWeight: existingUser.assessment_ideal_weight!,
+                    feedback: existingUser.assessment_feedback,
                 } : null;
 
                 const typedUser: User = {
@@ -197,12 +198,12 @@ const LandingPage = () => {
             } else {
                 // User does not exist, create new one.
                 // Create a payload for Supabase with a flat structure.
-                const userPayload = {
+                const userPayload: Database['public']['Tables']['users']['Insert'] = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,
                     registrationDate: new Date().toISOString(),
-                    progress: [] as number[],
+                    progress: [],
                     assessment_age: null,
                     assessment_height: null,
                     assessment_weight: null,
@@ -213,6 +214,7 @@ const LandingPage = () => {
                     assessment_training_location: null,
                     assessment_imc: null,
                     assessment_ideal_weight: null,
+                    assessment_feedback: null,
                 };
 
                 const { error: insertError } = await supabase
@@ -232,7 +234,7 @@ const LandingPage = () => {
                     email: formData.email,
                     whatsapp: formData.whatsapp,
                     registrationDate: userPayload.registrationDate,
-                    progress: [] as number[],
+                    progress: [],
                     assessment: null,
                 };
                 

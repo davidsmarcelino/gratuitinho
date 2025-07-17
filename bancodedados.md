@@ -1,3 +1,4 @@
+
 # Guia de Banco de Dados e Hospedagem (Supabase + Vercel)
 
 Este guia foi criado para te ajudar a configurar e colocar seu aplicativo no ar, mesmo que você não tenha nenhum conhecimento de programação. Vamos usar duas ferramentas gratuitas e poderosas:
@@ -55,6 +56,7 @@ CREATE TABLE public.users (
   assessment_training_location TEXT,
   assessment_imc NUMERIC(5, 2),
   assessment_ideal_weight TEXT,
+  assessment_feedback TEXT,
   -- Armazena um array de IDs das aulas concluídas em formato JSON.
   progress JSONB DEFAULT '[]'::jsonb NOT NULL
 );
@@ -65,6 +67,8 @@ COMMENT ON COLUMN public.users.email IS 'Email da aluna, usado como identificado
 COMMENT ON COLUMN public.users.assessment_age IS 'Idade da aluna na avaliação.';
 COMMENT ON COLUMN public.users.assessment_imc IS 'IMC calculado na avaliação.';
 COMMENT ON COLUMN public.users.assessment_goal IS 'Objetivo principal da aluna (ex: emagrecer).';
+COMMENT ON COLUMN public.users.assessment_feedback IS 'Feedback de IA gerado para a aluna.';
+
 
 -- Habilita a Segurança em Nível de Linha (RLS - Row Level Security).
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
