@@ -1,3 +1,4 @@
+
 // ========= TYPES =========
 export type User = {
   name: string;
@@ -59,14 +60,13 @@ export type FreeClass = {
 
 export type AdminSettings = {
   landingPage: {
+    pageTitle: string;
     brandName: string;
     heroTitleHighlight: string;
     heroTitle: string;
     heroSubtitle: string;
     heroDescription: string;
     heroImage: string;
-    title: string;
-    subtitle: string;
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
     beforeAndAfterTitle: string;
@@ -122,4 +122,76 @@ export interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   logout: () => void;
+}
+
+export interface Database {
+  public: {
+    Tables: {
+      users: {
+        Row: {
+          name: string;
+          email: string;
+          whatsapp: string;
+          registrationDate: string;
+          progress: number[];
+          assessment_age: number | null;
+          assessment_height: number | null;
+          assessment_weight: number | null;
+          assessment_activity_level: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality: number | null;
+          assessment_food_quality: number | null;
+          assessment_training_location: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc: number | null;
+          assessment_ideal_weight: string | null;
+        };
+        Insert: {
+          name: string;
+          email: string;
+          whatsapp: string;
+          registrationDate: string;
+          progress: number[];
+          assessment_age?: number | null;
+          assessment_height?: number | null;
+          assessment_weight?: number | null;
+          assessment_activity_level?: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal?: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality?: number | null;
+          assessment_food_quality?: number | null;
+          assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc?: number | null;
+          assessment_ideal_weight?: string | null;
+        };
+        Update: {
+          name?: string;
+          email?: string;
+          whatsapp?: string;
+          registrationDate?: string;
+          progress?: number[];
+          assessment_age?: number | null;
+          assessment_height?: number | null;
+          assessment_weight?: number | null;
+          assessment_activity_level?: 'sedentaria' | 'ativa' | 'muito_ativa' | null;
+          assessment_goal?: 'emagrecer' | 'definir' | 'ganhar_massa' | null;
+          assessment_sleep_quality?: number | null;
+          assessment_food_quality?: number | null;
+          assessment_training_location?: 'casa' | 'academia' | 'outro' | null;
+          assessment_imc?: number | null;
+          assessment_ideal_weight?: string | null;
+        };
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
 }

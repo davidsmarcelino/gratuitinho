@@ -1,8 +1,7 @@
 
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, AssessmentData } from './types.ts';
+import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, AssessmentData, Database } from './types.ts';
 import { merge } from 'lodash-es';
 
 // ========= SUPABASE SETUP =========
@@ -26,7 +25,7 @@ O aplicativo não funcionará corretamente sem elas.
 ****************************************************************`);
 }
 
-export const supabase = createClient(effectiveSupabaseUrl, effectiveSupabaseKey);
+export const supabase = createClient<Database>(effectiveSupabaseUrl, effectiveSupabaseKey);
 
 
 // ========= CONSTANTS & DEFAULTS =========
@@ -73,8 +72,7 @@ const DEFAULT_COACH: Coach = {
 
 const INITIAL_SETTINGS: AdminSettings = {
   landingPage: {
-    title: 'DESTRAVE A QUEIMA DE GORDURA E SEQUE EM TEMPO RECORDE',
-    subtitle: 'Acesse 3 aulas gratuitas e descubra o método para transformar seu corpo de uma vez por todas, mesmo com pouco tempo para treinar.',
+    pageTitle: 'Aptus Fit',
     vslEnabled: false,
     beforeAndAfter: [],
     beforeAndAfterTitle: 'Resultados Reais de Alunas Reais',
@@ -223,18 +221,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             throw new Error(`Supabase fetch error: ${error.message}`);
         }
 
-        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => {
+        const users: User[] = (usersFromSupabase || []).map((dbUser) => {
             const assessment = dbUser.assessment_age != null ? {
                 age: dbUser.assessment_age,
-                height: dbUser.assessment_height,
-                weight: dbUser.assessment_weight,
-                activityLevel: dbUser.assessment_activity_level,
-                goal: dbUser.assessment_goal,
-                sleepQuality: dbUser.assessment_sleep_quality,
-                foodQuality: dbUser.assessment_food_quality,
-                trainingLocation: dbUser.assessment_training_location,
-                imc: dbUser.assessment_imc,
-                idealWeight: dbUser.assessment_ideal_weight,
+                height: dbUser.assessment_height!,
+                weight: dbUser.assessment_weight!,
+                activityLevel: dbUser.assessment_activity_level!,
+                goal: dbUser.assessment_goal!,
+                sleepQuality: dbUser.assessment_sleep_quality!,
+                foodQuality: dbUser.assessment_food_quality!,
+                trainingLocation: dbUser.assessment_training_location!,
+                imc: dbUser.assessment_imc!,
+                idealWeight: dbUser.assessment_ideal_weight!,
             } : null;
 
             return {
@@ -243,7 +241,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 whatsapp: dbUser.whatsapp,
                 registrationDate: dbUser.registrationDate,
                 progress: dbUser.progress || [],
-                assessment: assessment as AssessmentData | null,
+                assessment: assessment,
             };
         });
         
@@ -309,7 +307,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment_ideal_weight: user.assessment?.idealWeight ?? null,
         };
         
-        const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
 
         if (error) {
             console.error('Error saving user data to Supabase:', error);
@@ -328,6 +326,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   const logout = useCallback(() => {
     dispatch({type: 'SET_USER', payload: null});
+    localStorage.removeItem('isAdminAuthenticated');
     sessionStorage.removeItem('gratuitinho_user_email');
   }, [dispatch]);
 

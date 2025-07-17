@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
@@ -61,8 +62,8 @@ const TestimonialCard: React.FC<{ testimonial: Testimonial; onPlayVideo: (videoI
                 </button>
             )}
         </div>
+        <p className="text-white font-bold text-center mb-2">- {testimonial.name}</p>
         <p className="text-gray-300 italic flex-grow">{`"${testimonial.text}"`}</p>
-        <p className="text-white font-bold text-center mt-4">- {testimonial.name}</p>
     </div>
 );
 
@@ -170,27 +171,26 @@ const LandingPage = () => {
             if (existingUser) {
                 // User exists, log them in.
                 // Reconstruct assessment object from flattened Supabase columns
-                const anyUser: any = existingUser;
-                const assessment = anyUser.assessment_age != null ? {
-                    age: anyUser.assessment_age,
-                    height: anyUser.assessment_height,
-                    weight: anyUser.assessment_weight,
-                    activityLevel: anyUser.assessment_activity_level,
-                    goal: anyUser.assessment_goal,
-                    sleepQuality: anyUser.assessment_sleep_quality,
-                    foodQuality: anyUser.assessment_food_quality,
-                    trainingLocation: anyUser.assessment_training_location,
-                    imc: anyUser.assessment_imc,
-                    idealWeight: anyUser.assessment_ideal_weight,
+                const assessment = existingUser.assessment_age != null ? {
+                    age: existingUser.assessment_age,
+                    height: existingUser.assessment_height!,
+                    weight: existingUser.assessment_weight!,
+                    activityLevel: existingUser.assessment_activity_level!,
+                    goal: existingUser.assessment_goal!,
+                    sleepQuality: existingUser.assessment_sleep_quality!,
+                    foodQuality: existingUser.assessment_food_quality!,
+                    trainingLocation: existingUser.assessment_training_location!,
+                    imc: existingUser.assessment_imc!,
+                    idealWeight: existingUser.assessment_ideal_weight!,
                 } : null;
 
                 const typedUser: User = {
-                    name: anyUser.name,
-                    email: anyUser.email,
-                    whatsapp: anyUser.whatsapp,
-                    registrationDate: anyUser.registrationDate,
-                    progress: anyUser.progress || [],
-                    assessment: assessment as AssessmentData | null,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    whatsapp: existingUser.whatsapp,
+                    registrationDate: existingUser.registrationDate,
+                    progress: existingUser.progress || [],
+                    assessment: assessment,
                 };
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
@@ -217,7 +217,7 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert(userPayload);
+                    .insert([userPayload]);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useApp } from './context.tsx';
 import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
@@ -120,6 +121,16 @@ const AdminPage = () => {
         }
     };
 
+    const handleTestimonialImageUpload = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        if (e.target.files?.[0]) {
+            handleImageUpload(e.target.files[0], (image) => {
+                const newTestimonials = [...settings.testimonials];
+                newTestimonials[index].image = image;
+                setSettings(prev => ({ ...prev, testimonials: newTestimonials }));
+            });
+        }
+    };
+
     const handleBeforeAfterChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
         const newBeforeAfter = [...settings.landingPage.beforeAndAfter];
         newBeforeAfter[index].name = e.target.value;
@@ -208,7 +219,55 @@ const AdminPage = () => {
                     )}
                     {activeTab === 'content' && (
                         <div className="space-y-8">
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Landing Page</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.landingPage.title} onChange={(e) => handleInputChange(e, 'landingPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.landingPage.subtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div></div></div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Página Principal (Landing Page)</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título da Aba do Navegador</label>
+                                        <input type="text" value={settings.landingPage.pageTitle || ''} onChange={(e) => handleInputChange(e, 'landingPage', 'pageTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Nome da Marca (no cabeçalho)</label>
+                                        <input type="text" value={settings.landingPage.brandName} onChange={(e) => handleInputChange(e, 'landingPage', 'brandName')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+
+                                    <div className="md:col-span-2 pt-4 border-t border-gray-700">
+                                        <h3 className="text-lg font-bold mb-2">Seção Principal (Hero)</h3>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Destaque do Título (Ex: Perca 15kg)</label>
+                                        <input type="text" value={settings.landingPage.heroTitleHighlight} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitleHighlight')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Restante do Título (Ex: em 90 Dias)</label>
+                                        <input type="text" value={settings.landingPage.heroTitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroTitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo do Hero</label>
+                                        <input type="text" value={settings.landingPage.heroSubtitle} onChange={(e) => handleInputChange(e, 'landingPage', 'heroSubtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Descrição do Hero</label>
+                                        <textarea value={settings.landingPage.heroDescription} onChange={(e) => handleInputChange(e, 'landingPage', 'heroDescription')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">URL da Imagem do Hero</label>
+                                        <input type="text" value={settings.landingPage.heroImage} onChange={(e) => handleInputChange(e, 'landingPage', 'heroImage')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    
+                                    <div className="md:col-span-2 pt-4 border-t border-gray-700">
+                                        <h3 className="text-lg font-bold mb-2">Seção de Aulas Gratuitas</h3>
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Título da Seção</label>
+                                        <input type="text" value={settings.freeClassesSection.title} onChange={(e) => handleInputChange(e, 'freeClassesSection', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                    </div>
+                                    <div className="md:col-span-2">
+                                        <label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo da Seção</label>
+                                        <textarea value={settings.freeClassesSection.subtitle} onChange={(e) => handleInputChange(e, 'freeClassesSection', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea>
+                                    </div>
+                                </div>
+                            </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
                                 <h2 className="text-2xl font-bold mb-4">Fotos Antes & Depois</h2>
                                 <div className="mb-4">
@@ -247,7 +306,57 @@ const AdminPage = () => {
                             </div>
                             <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Seção "Conheça o Treinador"</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Nome do Treinador</label><input type="text" value={settings.coach.name} onChange={(e) => handleInputChange(e, 'coach', 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Bio do Treinador</label><textarea value={settings.coach.bio} onChange={(e) => handleInputChange(e, 'coach', 'bio')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Foto do Treinador</label><div className="flex items-center gap-4 mt-2"><img src={settings.coach.image} alt="Coach preview" className="w-24 h-24 rounded-lg object-cover bg-dark-700"/><label htmlFor="coach-image-upload" className="cursor-pointer bg-dark-700 border border-gray-600 rounded-md py-2 px-4 text-sm font-medium text-gray-300 hover:bg-gray-600 flex items-center gap-2"><PencilIcon className="w-4 h-4" />Trocar imagem...</label><input id="coach-image-upload" name="coach-image-upload" type="file" className="sr-only" accept="image/*" onChange={handleCoachImageUpload} /></div></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Certificações (uma por linha)</label><textarea value={settings.coach.certifications.join('\n')} onChange={handleCoachCertificationsChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div></div></div>
                              <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Página de Upsell</h2><div className="space-y-4"><div><label className="block text-sm font-medium text-gray-300 mb-1">Título</label><input type="text" value={settings.upsellPage.title} onChange={(e) => handleInputChange(e, 'upsellPage', 'title')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Subtítulo</label><textarea value={settings.upsellPage.subtitle} onChange={(e) => handleInputChange(e, 'upsellPage', 'subtitle')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-24"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Benefícios da Oferta (um por linha)</label><textarea value={settings.upsellPage.features.join('\n')} onChange={handleUpsellFeaturesChange} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-32"></textarea></div><div><label className="block text-sm font-medium text-gray-300 mb-1">URL do Vídeo (YouTube Embed)</label><input type="text" value={settings.upsellPage.videoUrl} onChange={(e) => handleInputChange(e, 'upsellPage', 'videoUrl')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Cheio (Ex: R$497,00)</label><input type="text" value={settings.upsellPage.fullPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'fullPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="block text-sm font-medium text-gray-300 mb-1">Preço Promocional (Ex: R$197,00)</label><input type="text" value={settings.upsellPage.promoPrice} onChange={(e) => handleInputChange(e, 'upsellPage', 'promoPrice')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>
-                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700"><h2 className="text-2xl font-bold mb-4">Depoimentos</h2><div className="space-y-6">{settings.testimonials.map((testimonial, index) => (<div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800"><button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button><h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3><div className="grid md:grid-cols-2 gap-4"><div><label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label><input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div><label className="text-sm font-medium text-gray-300 mb-1 block">URL da Imagem:</label><input type="text" value={testimonial.image} onChange={e => handleTestimonialChange(e, index, 'image')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label><textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" /></div><div className="md:col-span-2"><label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label><input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" /></div></div></div>))}</div><div className="mt-6"><button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button></div></div>
+                            <div className="bg-dark-900 p-6 rounded-lg border border-gray-700">
+                                <h2 className="text-2xl font-bold mb-4">Depoimentos</h2>
+                                <div className="space-y-6">
+                                    {settings.testimonials.map((testimonial, index) => (
+                                        <div key={index} className="relative p-4 border border-gray-700 rounded-md bg-dark-800">
+                                            <button onClick={() => handleRemoveTestimonial(index)} title="Remover Depoimento" className="absolute top-4 right-4 text-red-500 hover:text-red-400 transition-colors"><TrashIcon className="w-5 h-5"/></button>
+                                            <h3 className="font-bold text-lg mb-2">Depoimento {index + 1}</h3>
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">Nome:</label>
+                                                    <input type="text" value={testimonial.name} onChange={e => handleTestimonialChange(e, index, 'name')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                                <div>
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">Imagem da Aluna</label>
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <img src={testimonial.image} alt={testimonial.name} className="w-12 h-12 rounded-full object-cover bg-dark-700"/>
+                                                        <input 
+                                                            type="text" 
+                                                            value={testimonial.image} 
+                                                            onChange={e => handleTestimonialChange(e, index, 'image')} 
+                                                            className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 text-xs" 
+                                                            placeholder="URL da imagem"
+                                                        />
+                                                    </div>
+                                                    <label htmlFor={`testimonial-img-${index}`} className="text-xs cursor-pointer text-brand-light hover:text-brand">
+                                                        Enviar do computador...
+                                                    </label>
+                                                    <input 
+                                                        id={`testimonial-img-${index}`} 
+                                                        type="file" 
+                                                        accept="image/*" 
+                                                        onChange={(e) => handleTestimonialImageUpload(e, index)} 
+                                                        className="sr-only"
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">Texto:</label>
+                                                    <textarea value={testimonial.text} onChange={e => handleTestimonialChange(e, index, 'text')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2 h-20" />
+                                                </div>
+                                                <div className="md:col-span-2">
+                                                    <label className="text-sm font-medium text-gray-300 mb-1 block">ID do Vídeo YouTube (Opcional):</label>
+                                                    <input type="text" value={testimonial.videoId || ''} onChange={e => handleTestimonialChange(e, index, 'videoId')} className="w-full bg-dark-700 border border-gray-600 rounded-md p-2" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="mt-6">
+                                    <button onClick={handleAddTestimonial} className="flex items-center gap-2 text-white bg-green-600 hover:bg-green-700 font-bold py-2 px-4 rounded transition-colors"><PlusIcon className="w-5 h-5" /> Adicionar Novo Depoimento</button>
+                                </div>
+                            </div>
                         </div>
                     )}
                     {activeTab === 'settings' && (

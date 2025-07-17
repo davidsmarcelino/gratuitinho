@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AppProvider, useApp } from './context.tsx';
 
@@ -50,6 +50,12 @@ const AdminProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children
 
 const AppRoutes = () => {
     const { state } = useApp();
+
+    useEffect(() => {
+        if (state.settings.landingPage.pageTitle) {
+            document.title = state.settings.landingPage.pageTitle;
+        }
+    }, [state.settings.landingPage.pageTitle]);
     
     return (
         <Routes>
