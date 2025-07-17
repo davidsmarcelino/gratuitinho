@@ -208,19 +208,19 @@ Para que o aplicativo funcione, tanto localmente quanto online, ele precisa de a
 
 ### Passo 1: Obter as Chaves Secretas
 
-Você vai precisar de 3 chaves:
+Você vai precisar de até 3 chaves principais:
 1.  **Supabase URL:**
     *   No painel do seu projeto Supabase, vá em **Project Settings** (ícone de engrenagem) > **API**.
     *   Copie o valor do campo **Project URL**.
 2.  **Supabase Anon (public) Key:**
     *   Na mesma página da API, na seção **Project API Keys**, copie o valor da chave `anon` `public`.
-3.  **Google Gemini API Key (para Feedback da IA):**
+3.  **Google Gemini API Key (Opcional, para Feedback da IA):**
     *   Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
     *   Faça login com sua conta Google.
     *   Clique em **"Create API key in new project"**.
-    *   Copie a chave gerada.
+    *   Copie a chave gerada. Esta chave habilita a funcionalidade de feedback automático e personalizado para as alunas após a avaliação inicial. Se você não configurar esta chave, o sistema usará uma mensagem padrão.
 
-**Guarde essas 3 chaves em um local seguro.**
+**Guarde essas chaves em um local seguro.**
 
 ### Passo 2: Configurar para Desenvolvimento Local
 
@@ -232,11 +232,13 @@ Para rodar o aplicativo no seu computador, você precisa criar um arquivo para g
 ```
 # .env
 
-# Supabase credentials
+# Supabase credentials (Obrigatório)
 VITE_SUPABASE_URL="COLE_AQUI_SUA_URL_DO_SUPABASE"
 VITE_SUPABASE_KEY="COLE_AQUI_SUA_CHAVE_ANON_DO_SUPABASE"
 
-# Google Gemini API Key for AI Feedback feature
+# Google Gemini API Key (Opcional, para o feedback da IA)
+# O sistema usará esta chave para gerar análises personalizadas.
+# Se esta variável não for definida, uma mensagem padrão será usada.
 VITE_AI_FEEDBACK_API_KEY="COLE_AQUI_SUA_CHAVE_DA_API_DO_GEMINI"
 ```
 3.  Salve o arquivo. **Importante:** Este arquivo `.env` nunca deve ser enviado para o GitHub. Ele é apenas para o seu uso local.
@@ -265,7 +267,7 @@ A Vercel precisa encontrar seu código em um repositório do GitHub.
     *   **Variável 2:**
         *   **NAME:** `VITE_SUPABASE_KEY`
         *   **VALUE:** Cole aqui a sua **chave anon do Supabase**.
-    *   **Variável 3:**
+    *   **Variável 3 (Opcional):**
         *   **NAME:** `VITE_AI_FEEDBACK_API_KEY`
         *   **VALUE:** Cole aqui a sua **chave da API do Gemini**.
 7.  Após adicionar as três, clique no botão azul **"Deploy"**.

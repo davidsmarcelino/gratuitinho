@@ -217,7 +217,7 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([userPayload]);
+                    .insert(userPayload);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation
@@ -335,7 +335,7 @@ const LandingPage = () => {
                 {state.settings.landingPage.beforeAndAfter.length > 0 && (
                     <section id="resultados" className="py-24 bg-dark-800">
                         <div className="container mx-auto px-4">
-                            <h2 className="text-3xl md:text-4xl font-bold font-heading mb-16 text-center text-white">Resultados Reais de Alunas Reais</h2>
+                            <h2 className="text-3xl md:text-4xl font-bold font-heading mb-16 text-center text-white">{state.settings.landingPage.beforeAndAfterTitle}</h2>
                             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                                 {state.settings.landingPage.beforeAndAfter.map((item, index) => (
                                     <BeforeAndAfterCard key={index} beforeImage={item.before} afterImage={item.after} name={item.name} />

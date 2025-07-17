@@ -1,9 +1,9 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useApp, supabase } from './context.tsx';
-import { User, Testimonial } from './types.ts';
+import { User, Testimonial, AssessmentData } from './types.ts';
 import { 
     CountdownTimer, CTAButton, YouTubeEmbed, Modal, PlayCircleIcon, 
     CheckIcon, ArrowRightIcon, ArrowUpIcon,
@@ -87,7 +87,7 @@ const BeforeAndAfterCard: React.FC<{ beforeImage: string, afterImage: string, na
 );
 
 
-const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick }) => {
+const LandingPageHeader: React.FC<{ onCtaClick: () => void; showResultadosLink: boolean; brandName: string; }> = ({ onCtaClick, showResultadosLink, brandName }) => {
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
         e.preventDefault();
         const element = document.getElementById(targetId);
@@ -102,10 +102,12 @@ const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick })
     return (
         <header className="absolute top-0 left-0 right-0 z-20 p-4">
             <div className="container mx-auto flex justify-between items-center">
-                <h1 className="text-2xl font-bold font-heading">FitConsult</h1>
+                <h1 className="text-2xl font-bold font-heading">{brandName}</h1>
                 <nav className="hidden md:flex items-center space-x-8 text-sm">
                     <a href="#aulas" onClick={(e) => handleNavClick(e, 'aulas')} className="hover:text-brand transition-colors">Aulas</a>
-                    <a href="#resultados" onClick={(e) => handleNavClick(e, 'resultados')} className="hover:text-brand transition-colors">Resultados</a>
+                    {showResultadosLink && (
+                        <a href="#resultados" onClick={(e) => handleNavClick(e, 'resultados')} className="hover:text-brand transition-colors">Resultados</a>
+                    )}
                     <a href="#depoimentos" onClick={(e) => handleNavClick(e, 'depoimentos')} className="hover:text-brand transition-colors">Depoimentos</a>
                     <a href="#coach" onClick={(e) => handleNavClick(e, 'coach')} className="hover:text-brand transition-colors">Sobre</a>
                 </nav>
@@ -116,27 +118,6 @@ const LandingPageHeader: React.FC<{ onCtaClick: () => void }> = ({ onCtaClick })
         </header>
     );
 };
-
-const lessons = [
-    { 
-        icon: MetabolismIcon, 
-        title: "Aula 1: Metabolismo Acelerado", 
-        description: "Aprenda a acelerar seu metabolismo natural e queimar gordura 24 horas por dia.",
-        features: ["Técnicas comprovadas cientificamente", "Queima de gordura otimizada"]
-    },
-    { 
-        icon: NutritionIcon, 
-        title: "Aula 2: Alimentação Estratégica", 
-        description: "Descubra como comer mais e ainda assim perder peso com nossa estratégia nutricional.",
-        features: ["Sem contar calorias", "Receitas práticas"]
-    },
-    { 
-        icon: MindsetIcon, 
-        title: "Aula 3: Mindset Vencedor", 
-        description: "Transforme sua mente para manter os resultados para sempre e eliminar a autosabotagem.",
-        features: ["Técnicas de motivação", "Hábitos duradouros"]
-    },
-];
 
 const benefits = [
     { icon: EnergyIcon, title: "Mais Disposição", description: "Sinta-se energizada o dia todo com nosso método de ativação metabólica." },
@@ -157,6 +138,11 @@ const LandingPage = () => {
     const [videoToPlay, setVideoToPlay] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+
+    const { brandName, heroTitleHighlight, heroTitle, heroSubtitle, heroDescription, heroImage } = state.settings.landingPage;
+    const { freeClassesSection } = state.settings;
+    const icons = [MetabolismIcon, NutritionIcon, MindsetIcon];
+
 
     const handleOpenRegModal = () => {
         setError(null);
@@ -184,15 +170,27 @@ const LandingPage = () => {
             const existingUser = userResponse.data;
 
             if (existingUser) {
-                // User exists, log them in
-                // Manually construct the user object to avoid deep type instantiation errors.
+                const anyUser: any = existingUser;
+                const assessment = anyUser.assessment_age != null ? {
+                    age: anyUser.assessment_age,
+                    height: anyUser.assessment_height,
+                    weight: anyUser.assessment_weight,
+                    activityLevel: anyUser.assessment_activity_level,
+                    goal: anyUser.assessment_goal,
+                    sleepQuality: anyUser.assessment_sleep_quality,
+                    foodQuality: anyUser.assessment_food_quality,
+                    trainingLocation: anyUser.assessment_training_location,
+                    imc: anyUser.assessment_imc,
+                    idealWeight: anyUser.assessment_ideal_weight,
+                } : null;
+
                 const typedUser: User = {
-                    name: existingUser.name,
-                    email: existingUser.email,
-                    whatsapp: existingUser.whatsapp,
-                    registrationDate: existingUser.registrationDate,
-                    progress: existingUser.progress || [],
-                    assessment: existingUser.assessment || null,
+                    name: anyUser.name,
+                    email: anyUser.email,
+                    whatsapp: anyUser.whatsapp,
+                    registrationDate: anyUser.registrationDate,
+                    progress: anyUser.progress || [],
+                    assessment: assessment as AssessmentData | null,
                 };
                 dispatch({ type: 'SET_USER', payload: typedUser });
                 navigate('/dashboard');
@@ -207,18 +205,27 @@ const LandingPage = () => {
                     assessment: null,
                 };
 
+                const userPayload = {
+                    name: newUser.name,
+                    email: newUser.email,
+                    whatsapp: newUser.whatsapp,
+                    registrationDate: newUser.registrationDate,
+                    progress: newUser.progress,
+                    assessment_age: null,
+                    assessment_height: null,
+                    assessment_weight: null,
+                    assessment_activity_level: null,
+                    assessment_goal: null,
+                    assessment_sleep_quality: null,
+                    assessment_food_quality: null,
+                    assessment_training_location: null,
+                    assessment_imc: null,
+                    assessment_ideal_weight: null,
+                };
+
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([
-                        {
-                            name: newUser.name,
-                            email: newUser.email,
-                            whatsapp: newUser.whatsapp,
-                            registrationDate: newUser.registrationDate,
-                            progress: newUser.progress,
-                            assessment: newUser.assessment,
-                        }
-                    ]);
+                    .insert(userPayload);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation
@@ -257,7 +264,7 @@ const LandingPage = () => {
     
     return (
         <div className="bg-dark-900 overflow-x-hidden">
-            <LandingPageHeader onCtaClick={handleOpenRegModal} />
+            <LandingPageHeader brandName={brandName} onCtaClick={handleOpenRegModal} showResultadosLink={state.settings.landingPage.beforeAndAfter.length > 0} />
             
             <main>
                 {/* Hero Section */}
@@ -267,11 +274,11 @@ const LandingPage = () => {
                     <div className="container mx-auto px-4 grid md:grid-cols-2 gap-8 items-center relative z-10">
                         <div className="text-center md:text-left">
                             <h1 className="text-5xl md:text-7xl font-black font-heading uppercase leading-tight tracking-tighter">
-                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-brand">Perca 15kg</span> em 90 Dias
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-light to-brand">{heroTitleHighlight}</span> {heroTitle}
                             </h1>
-                            <h2 className="text-2xl md:text-3xl font-bold mt-2 text-gray-200">Sem Dietas Restritivas</h2>
+                            <h2 className="text-2xl md:text-3xl font-bold mt-2 text-gray-200">{heroSubtitle}</h2>
                             <p className="mt-6 text-lg text-gray-300 max-w-lg mx-auto md:mx-0">
-                                Descubra o método científico que já transformou mais de 10.000 mulheres.
+                                {heroDescription}
                             </p>
                             <div className="mt-8 bg-dark-800/50 border border-dark-700 p-4 rounded-lg max-w-sm mx-auto md:mx-0 backdrop-blur-sm">
                                 <p className="font-bold uppercase text-sm text-gray-300">Esta Oferta Termina em:</p>
@@ -285,11 +292,7 @@ const LandingPage = () => {
                         </div>
                         <div className="hidden md:block">
                             <div className="relative">
-                                <img src="https://i.imgur.com/gWahM2y.png" alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
-                                <div className="absolute bottom-4 left-4 bg-white/80 backdrop-blur-sm text-dark-900 p-3 rounded-lg shadow-lg">
-                                    <p className="font-bold">Resultados Reais</p>
-                                    <p className="text-sm">Transformação em 90 dias</p>
-                                </div>
+                                <img src={heroImage} alt="Mulher se exercitando" className="w-full h-auto rounded-lg shadow-2xl shadow-brand/10" />
                             </div>
                         </div>
                     </div>
@@ -298,13 +301,13 @@ const LandingPage = () => {
                 {/* Lessons Section */}
                 <section id="aulas" className="py-24 bg-gray-100 text-dark-800">
                     <div className="container mx-auto px-4 text-center">
-                        <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4">3 Aulas Gratuitas Que Vão Mudar Sua Vida</h2>
-                        <p className="text-lg text-gray-600 mb-16 max-w-2xl mx-auto">Acesse gratuitamente nosso conteúdo exclusivo e comece sua transformação hoje mesmo.</p>
+                        <h2 className="text-3xl md:text-4xl font-bold font-heading mb-4">{freeClassesSection.title}</h2>
+                        <p className="text-lg text-gray-600 mb-16 max-w-2xl mx-auto">{freeClassesSection.subtitle}</p>
                         <div className="grid md:grid-cols-3 gap-8">
-                            {lessons.map((lesson, index) => (
+                            {freeClassesSection.classes.map((lesson, index) => (
                                 <div key={index} className="bg-white p-8 rounded-xl border border-gray-200 text-left shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-300">
                                     <div className="text-brand w-16 h-16 flex items-center justify-center rounded-2xl bg-brand/10 mb-6 text-brand-dark">
-                                        {React.createElement(lesson.icon, {className: "w-10 h-10"})}
+                                        {React.createElement(icons[index % icons.length], {className: "w-10 h-10"})}
                                     </div>
                                     <h3 className="text-xl font-bold mb-3">{lesson.title}</h3>
                                     <p className="text-gray-600 mb-5 min-h-[72px]">{lesson.description}</p>
@@ -408,9 +411,6 @@ const LandingPage = () => {
             
             <footer className="text-center p-6 bg-dark-800 border-t border-dark-700">
                  <p className="text-sm text-gray-400">&copy; {new Date().getFullYear()} FitConsult. Todos os direitos reservados.</p>
-                <Link to="/admin" className="text-xs text-gray-500 hover:text-brand transition-colors">
-                    Painel do Admin
-                </Link>
             </footer>
 
             {/* Sticky CTA */}

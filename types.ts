@@ -51,12 +51,29 @@ export type BeforeAndAfterImage = {
     name: string; // student name
 }
 
+export type FreeClass = {
+  title: string;
+  description: string;
+  features: string[];
+};
+
 export type AdminSettings = {
   landingPage: {
+    brandName: string;
+    heroTitleHighlight: string;
+    heroTitle: string;
+    heroSubtitle: string;
+    heroDescription: string;
+    heroImage: string;
     title: string;
     subtitle: string;
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
+  };
+  freeClassesSection: {
+    title: string;
+    subtitle: string;
+    classes: FreeClass[];
   };
   coach: Coach;
   lessons: Lesson[];
@@ -68,6 +85,16 @@ export type AdminSettings = {
     title: string;
     subtitle: string;
     features: string[];
+    mediaType: 'video' | 'image' | 'none';
+    imageUrl: string;
+    subtitleNoMedia: string;
+    installmentsEnabled: boolean;
+    installmentsNumber: number;
+    installmentsPrice: string;
+    ctaLink: string;
+  };
+  ai: {
+    assessmentFeedbackFallback: string;
   };
   freeAccessDays: number;
   offerCountdownHours: number;

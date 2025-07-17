@@ -51,7 +51,7 @@ export type BeforeAndAfterImage = {
     name: string; // student name
 }
 
-export type FreeClassInfo = {
+export type FreeClass = {
   title: string;
   description: string;
   features: string[];
@@ -65,35 +65,37 @@ export type AdminSettings = {
     heroSubtitle: string;
     heroDescription: string;
     heroImage: string;
+    title: string;
+    subtitle: string;
     vslEnabled: boolean;
     beforeAndAfter: BeforeAndAfterImage[];
+    beforeAndAfterTitle: string;
   };
   freeClassesSection: {
     title: string;
     subtitle: string;
-    classes: FreeClassInfo[];
-  };
-  dashboard: {
-    promoLinkText: string;
-    promoLinkUrl: string;
+    classes: FreeClass[];
   };
   coach: Coach;
   lessons: Lesson[];
   testimonials: Testimonial[];
   upsellPage: {
-    title: string;
-    subtitle: string;
-    subtitleNoMedia?: string;
-    features: string[];
-    mediaType: 'video' | 'image' | 'none';
     videoUrl: string;
-    imageUrl: string;
     fullPrice: string;
     promoPrice: string;
-    ctaLink: string;
+    title: string;
+    subtitle: string;
+    features: string[];
+    mediaType: 'video' | 'image' | 'none';
+    imageUrl: string;
+    subtitleNoMedia: string;
     installmentsEnabled: boolean;
     installmentsNumber: number;
     installmentsPrice: string;
+    ctaLink: string;
+  };
+  ai: {
+    assessmentFeedbackFallback: string;
   };
   freeAccessDays: number;
   offerCountdownHours: number;
@@ -120,5 +122,4 @@ export interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   logout: () => void;
-  saveSettings: (settings: AdminSettings) => Promise<void>;
 }

@@ -1,10 +1,9 @@
 
 
-
-
 import React, { createContext, useReducer, useEffect, useCallback, useContext } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User } from './types.ts';
+import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, Coach, User, AssessmentData } from './types.ts';
+import { merge } from 'lodash-es';
 
 // ========= SUPABASE SETUP =========
 // Credentials are now loaded from environment variables for security.
@@ -78,6 +77,33 @@ const INITIAL_SETTINGS: AdminSettings = {
     subtitle: 'Acesse 3 aulas gratuitas e descubra o método para transformar seu corpo de uma vez por todas, mesmo com pouco tempo para treinar.',
     vslEnabled: false,
     beforeAndAfter: [],
+    brandName: 'FitConsult',
+    heroTitleHighlight: 'Perca 15kg',
+    heroTitle: 'em 90 Dias',
+    heroSubtitle: 'Sem Dietas Restritivas',
+    heroDescription: 'Descubra o método científico que já transformou mais de 10.000 mulheres.',
+    heroImage: 'https://i.imgur.com/gWahM2y.png',
+  },
+   freeClassesSection: {
+    title: '3 Aulas Gratuitas Que Vão Mudar Sua Vida',
+    subtitle: 'Acesse gratuitamente nosso conteúdo exclusivo e comece sua transformação hoje mesmo.',
+    classes: [
+      { 
+        title: "Aula 1: Metabolismo Acelerado", 
+        description: "Aprenda a acelerar seu metabolismo natural e queimar gordura 24 horas por dia.",
+        features: ["Técnicas comprovadas cientificamente", "Queima de gordura otimizada"]
+      },
+      { 
+        title: "Aula 2: Alimentação Estratégica", 
+        description: "Descubra como comer mais e ainda assim perder peso com nossa estratégia nutricional.",
+        features: ["Sem contar calorias", "Receitas práticas"]
+      },
+      { 
+        title: "Aula 3: Mindset Vencedor", 
+        description: "Transforme sua mente para manter os resultados para sempre e eliminar a autosabotagem.",
+        features: ["Técnicas de motivação", "Hábitos duradouros"]
+      },
+    ]
   },
   coach: DEFAULT_COACH,
   lessons: DEFAULT_LESSONS,
@@ -95,6 +121,16 @@ const INITIAL_SETTINGS: AdminSettings = {
         "Grupo exclusivo de alunas no WhatsApp",
         "Suporte direto comigo para tirar dúvidas"
     ],
+    mediaType: 'video',
+    imageUrl: 'https://i.imgur.com/L8aD5fG.png',
+    subtitleNoMedia: 'Você provou que é capaz. Agora, vamos acelerar seus resultados com minha consultoria premium.',
+    installmentsEnabled: true,
+    installmentsNumber: 12,
+    installmentsPrice: 'R$19,70',
+    ctaLink: 'https://checkout.com',
+  },
+  ai: {
+    assessmentFeedbackFallback: 'Olá, {name}! Recebemos sua avaliação. Estamos muito animadas para começar esta jornada com você e te ajudar a alcançar seu objetivo. Sua primeira aula já está liberada. Vamos com tudo!'
   },
   freeAccessDays: 7,
   offerCountdownHours: 24,
@@ -172,18 +208,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       try {
         const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
         if (storedSettingsJSON) {
-           // Deep merge to ensure new properties from INITIAL_SETTINGS are added
-          // while preserving user's existing settings.
           const storedSettings = JSON.parse(storedSettingsJSON);
-          loadedSettings = {
-            ...INITIAL_SETTINGS,
-            ...storedSettings,
-            landingPage: { ...INITIAL_SETTINGS.landingPage, ...storedSettings.landingPage },
-            coach: { ...INITIAL_SETTINGS.coach, ...storedSettings.coach },
-            upsellPage: { ...INITIAL_SETTINGS.upsellPage, ...storedSettings.upsellPage },
-            lessons: storedSettings.lessons || INITIAL_SETTINGS.lessons,
-            testimonials: storedSettings.testimonials || INITIAL_SETTINGS.testimonials,
-          };
+          loadedSettings = merge({}, INITIAL_SETTINGS, storedSettings);
         }
       } catch (error) {
         console.error("Failed to load settings from localStorage", error);
@@ -195,14 +221,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             throw new Error(`Supabase fetch error: ${error.message}`);
         }
 
-        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => ({
-            name: dbUser.name,
-            email: dbUser.email,
-            whatsapp: dbUser.whatsapp,
-            registrationDate: dbUser.registrationDate,
-            progress: dbUser.progress || [],
-            assessment: dbUser.assessment || null,
-        }));
+        const users: User[] = (usersFromSupabase || []).map((dbUser: any) => {
+            const assessment = dbUser.assessment_age != null ? {
+                age: dbUser.assessment_age,
+                height: dbUser.assessment_height,
+                weight: dbUser.assessment_weight,
+                activityLevel: dbUser.assessment_activity_level,
+                goal: dbUser.assessment_goal,
+                sleepQuality: dbUser.assessment_sleep_quality,
+                foodQuality: dbUser.assessment_food_quality,
+                trainingLocation: dbUser.assessment_training_location,
+                imc: dbUser.assessment_imc,
+                idealWeight: dbUser.assessment_ideal_weight,
+            } : null;
+
+            return {
+                name: dbUser.name,
+                email: dbUser.email,
+                whatsapp: dbUser.whatsapp,
+                registrationDate: dbUser.registrationDate,
+                progress: dbUser.progress || [],
+                assessment: assessment as AssessmentData | null,
+            };
+        });
         
         // Load logged-in user from session storage
         const sessionUserEmail = sessionStorage.getItem('gratuitinho_user_email');
@@ -248,19 +289,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
 
-        // By creating a plain payload object from the user state, we prevent complex type-checking issues
-        // with the Supabase client library that can lead to "type instantiation is excessively deep" errors.
         const userPayload = {
             name: user.name,
             email: user.email,
             whatsapp: user.whatsapp,
             registrationDate: user.registrationDate,
-            assessment: user.assessment || null,
-            progress: user.progress
+            progress: user.progress,
+            assessment_age: user.assessment?.age ?? null,
+            assessment_height: user.assessment?.height ?? null,
+            assessment_weight: user.assessment?.weight ?? null,
+            assessment_activity_level: user.assessment?.activityLevel ?? null,
+            assessment_goal: user.assessment?.goal ?? null,
+            assessment_sleep_quality: user.assessment?.sleepQuality ?? null,
+            assessment_food_quality: user.assessment?.foodQuality ?? null,
+            assessment_training_location: user.assessment?.trainingLocation ?? null,
+            assessment_imc: user.assessment?.imc ?? null,
+            assessment_ideal_weight: user.assessment?.idealWeight ?? null,
         };
         
-        // IMPORTANT: Assumes a 'users' table with 'email' as the primary key.
-        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert(userPayload, { onConflict: 'email' });
 
         if (error) {
             console.error('Error saving user data to Supabase:', error);
