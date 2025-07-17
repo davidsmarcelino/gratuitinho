@@ -197,7 +197,7 @@ const LandingPage = () => {
             } else {
                 // User does not exist, create new one.
                 // Create a payload for Supabase with a flat structure.
-                const userPayload = {
+                const userPayload: any = {
                     name: formData.name,
                     email: formData.email,
                     whatsapp: formData.whatsapp,
@@ -217,7 +217,7 @@ const LandingPage = () => {
 
                 const { error: insertError } = await supabase
                     .from('users')
-                    .insert([userPayload] as any);
+                    .insert([userPayload]);
 
                 if (insertError) {
                     if (insertError.code === '23505') { // Handle unique constraint violation

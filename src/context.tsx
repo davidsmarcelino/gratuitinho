@@ -159,7 +159,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
        
     const syncUser = async () => {
         dispatch({ type: 'SET_SYNC_STATUS', payload: 'syncing' });
-        const userPayload = {
+        const userPayload: any = {
             name: user.name, email: user.email, whatsapp: user.whatsapp,
             registrationDate: user.registrationDate, progress: user.progress,
             assessment_age: user.assessment?.age ?? null, assessment_height: user.assessment?.height ?? null,
@@ -168,7 +168,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             assessment_food_quality: user.assessment?.foodQuality ?? null, assessment_training_location: user.assessment?.trainingLocation ?? null,
             assessment_imc: user.assessment?.imc ?? null, assessment_ideal_weight: user.assessment?.idealWeight ?? null,
         };
-        const { error } = await supabase.from('users').upsert([userPayload] as any, { onConflict: 'email' });
+        const { error } = await supabase.from('users').upsert([userPayload], { onConflict: 'email' });
         if (error) {
             console.error('Erro ao salvar dados do usuário no Supabase:', error);
             dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
@@ -199,19 +199,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dispatch({ type: 'UPDATE_SETTINGS', payload: newSettings });
       localStorage.setItem('gratuitinho_settings', JSON.stringify(newSettings));
       
+      const updatePayload: any = { config: newSettings, updated_at: new Date().toISOString() };
       const { error } = await supabase
         .from('settings')
-        .update({ config: newSettings, updated_at: new Date().toISOString() } as any)
+        .update(updatePayload)
         .eq('id', 1);
 
       if (error) throw error;
 
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'success' });
       setTimeout(() => dispatch({ type: 'SET_SYNC_STATUS', payload: 'idle' }), 2000);
-    } catch (error) {
-      console.error('Erro ao salvar configurações no Supabase:', error);
+    } catch (e) {
+      console.error('Erro ao salvar configurações no Supabase:', e);
       dispatch({ type: 'SET_SYNC_STATUS', payload: 'error' });
-      throw error; // Propaga o erro para o componente que chamou
+      throw e; // Propaga o erro para o componente que chamou
     }
   }, []);
 
