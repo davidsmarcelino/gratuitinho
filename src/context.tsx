@@ -5,8 +5,6 @@ import { AppState, Action, Lesson, AdminSettings, Testimonial, AppContextType, C
 import { merge } from 'lodash-es';
 
 // ========= SUPABASE SETUP =========
-// Credentials are now loaded from environment variables for security.
-// See .env.example and bancodedados.md for setup instructions.
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
@@ -76,11 +74,11 @@ const INITIAL_SETTINGS: AdminSettings = {
     vslEnabled: false,
     beforeAndAfter: [],
     beforeAndAfterTitle: 'Resultados Reais de Alunas Reais',
-    brandName: 'FitConsult',
-    heroTitleHighlight: 'Perca 15kg',
-    heroTitle: 'em 90 Dias',
+    brandName: 'Aptus Fit',
+    heroTitleHighlight: 'Perca 5KG',
+    heroTitle: 'em 21 Dias',
     heroSubtitle: 'Sem Dietas Restritivas',
-    heroDescription: 'Descubra o método científico que já transformou mais de 10.000 mulheres.',
+    heroDescription: 'Descubra o método científico que já transformou a vida de milhares de alunas.',
     heroImage: 'https://i.imgur.com/gWahM2y.png',
   },
    freeClassesSection: {
@@ -144,7 +142,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
     case 'SET_USER':
       return { ...state, user: action.payload };
     case 'ADD_USER':
-      // Prevent adding duplicates to the local state
       if (state.users.some(u => u.email === action.payload.email)) {
         return state;
       }
@@ -200,26 +197,33 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     syncStatus: 'idle',
   });
 
-  // Effect to load initial settings from localStorage and users from Supabase
   useEffect(() => {
     const loadInitialData = async () => {
       let loadedSettings = INITIAL_SETTINGS;
+
       try {
-        const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
-        if (storedSettingsJSON) {
-          const storedSettings = JSON.parse(storedSettingsJSON);
-          // Use lodash merge for deep merging, which is more robust for nested objects.
-          loadedSettings = merge({}, INITIAL_SETTINGS, storedSettings);
+        const { data: settingsData, error } = await supabase.from('settings').select('config').eq('id', 1).single();
+        if (error) throw error;
+        if (settingsData?.config) {
+          loadedSettings = merge({}, INITIAL_SETTINGS, settingsData.config);
+          console.log("Settings loaded from Supabase.");
         }
       } catch (error) {
-        console.error("Failed to load settings from localStorage", error);
+        console.error("Could not load settings from Supabase, trying localStorage.", error);
+        try {
+            const storedSettingsJSON = localStorage.getItem('gratuitinho_settings');
+            if (storedSettingsJSON) {
+              loadedSettings = merge({}, INITIAL_SETTINGS, JSON.parse(storedSettingsJSON));
+              console.log("Settings loaded from localStorage fallback.");
+            }
+        } catch (lsError) {
+            console.error("Could not load settings from localStorage either.", lsError);
+        }
       }
       
       try {
         const { data: usersFromSupabase, error } = await supabase.from('users').select('*');
-        if (error) {
-            throw new Error(`Supabase fetch error: ${error.message}`);
-        }
+        if (error) throw new Error(`Supabase fetch error: ${error.message}`);
 
         const users: User[] = (usersFromSupabase || []).map((dbUser) => {
             const assessment = dbUser.assessment_age != null ? {
@@ -246,14 +250,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             };
         });
         
-        // Load logged-in user from session storage
         const sessionUserEmail = sessionStorage.getItem('gratuitinho_user_email');
         const currentUser = sessionUserEmail ? (users.find(u => u.email === sessionUserEmail) || null) : null;
 
         dispatch({ type: 'SET_STATE', payload: { user: currentUser, users: users, settings: loadedSettings, appStatus: 'ready', syncStatus: 'idle' } });
       } catch (error) {
         console.error("Failed to load users from Supabase", error);
-        // Still load the app, but with empty user data
         dispatch({ type: 'SET_STATE', payload: { ...state, settings: loadedSettings, users: [], user: null, appStatus: 'ready' } });
       }
     };
@@ -261,20 +263,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (!areCredentialsMissing) {
       loadInitialData();
     } else {
-      // If credentials are missing, just set the app status to ready to show the warning.
       dispatch({ type: 'SET_STATE', payload: { ...state, appStatus: 'ready' } });
     }
      // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect to save settings to localStorage
   useEffect(() => {
     if (state.appStatus === 'ready') {
       localStorage.setItem('gratuitinho_settings', JSON.stringify(state.settings));
     }
   }, [state.settings, state.appStatus]);
 
-  // Effect to save updated user to Supabase and session storage
   const userJson = JSON.stringify(state.user);
   useEffect(() => {
     if (areCredentialsMissing || state.appStatus !== 'ready' || !state.user) {
@@ -322,7 +321,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     syncUser();
-
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userJson, state.appStatus]);
   

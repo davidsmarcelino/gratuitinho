@@ -1,4 +1,3 @@
-
 // ========= TYPES =========
 export type User = {
   name: string;
@@ -182,6 +181,21 @@ export type Database = {
           assessment_imc?: number | null;
           assessment_ideal_weight?: string | null;
           assessment_feedback?: string | null;
+        };
+        Relationships: [];
+      };
+      settings: {
+        Row: {
+          id: number;
+          config: AdminSettings;
+        };
+        Insert: {
+          id: number;
+          config: AdminSettings;
+        };
+        Update: {
+          id?: number;
+          config?: AdminSettings;
         };
         Relationships: [];
       };

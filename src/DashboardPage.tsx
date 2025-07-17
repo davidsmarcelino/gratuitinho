@@ -454,8 +454,8 @@ const DashboardPage = () => {
                 onClose={() => setIsUpsellModalOpen(false)}
             />
             
-            <Modal isOpen={isAssessmentModalOpen} onClose={() => setAssessmentModalOpen(false)} size="2xl">
-                <AssessmentForm onComplete={() => setAssessmentModalOpen(false)} />
+            <Modal isOpen={isAssessmentModalOpen && !user.assessment} onClose={() => setAssessmentModalOpen(false)} size="2xl">
+                <AssessmentForm onComplete={() => {setAssessmentModalOpen(false); setShowFeedbackBanner(true);}} />
             </Modal>
         </div>
     );

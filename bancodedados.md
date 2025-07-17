@@ -34,18 +34,11 @@ Esta é a parte mais importante. Vamos criar as "planilhas" online que vão guar
 
 ```sql
 -- ========= TABELA DE ALUNAS (USERS) =========
-
--- Cria a tabela "users" para armazenar todas as informações das alunas.
 CREATE TABLE public.users (
-  -- Nome completo da aluna.
   name TEXT NOT NULL,
-  -- Email da aluna. Este é o identificador único e a chave principal.
   email TEXT NOT NULL PRIMARY KEY,
-  -- Número de WhatsApp da aluna.
   whatsapp TEXT NOT NULL,
-  -- Data e hora em que a aluna se cadastrou. O valor padrão é a hora atual.
   "registrationDate" TIMESTAMPTZ NOT NULL DEFAULT now(),
-  -- Campos da avaliação (separados para melhor organização dos dados).
   assessment_age INT,
   assessment_height INT,
   assessment_weight INT,
@@ -57,80 +50,42 @@ CREATE TABLE public.users (
   assessment_imc NUMERIC(5, 2),
   assessment_ideal_weight TEXT,
   assessment_feedback TEXT,
-  -- Armazena um array de IDs das aulas concluídas em formato JSON.
   progress JSONB DEFAULT '[]'::jsonb NOT NULL
 );
-
--- Adiciona comentários para clareza.
 COMMENT ON TABLE public.users IS 'Tabela para armazenar os dados das alunas cadastradas.';
 COMMENT ON COLUMN public.users.email IS 'Email da aluna, usado como identificador único (PK).';
-COMMENT ON COLUMN public.users.assessment_age IS 'Idade da aluna na avaliação.';
-COMMENT ON COLUMN public.users.assessment_imc IS 'IMC calculado na avaliação.';
-COMMENT ON COLUMN public.users.assessment_goal IS 'Objetivo principal da aluna (ex: emagrecer).';
-COMMENT ON COLUMN public.users.assessment_feedback IS 'Feedback de IA gerado para a aluna.';
-
-
--- Habilita a Segurança em Nível de Linha (RLS - Row Level Security).
 ALTER TABLE public.users ENABLE ROW LEVEL SECURITY;
-
--- POLÍTICAS DE ACESSO PARA A TABELA 'users'
--- Permite que qualquer pessoa leia, insira ou atualize registros.
--- A lógica de segurança do app garante que um usuário só edite seus próprios dados.
-CREATE POLICY "Allow public access to users"
-ON public.users
-FOR ALL
-USING (true)
-WITH CHECK (true);
+CREATE POLICY "Allow public access to users" ON public.users FOR ALL USING (true) WITH CHECK (true);
 
 
 -- ========= TABELA DE CONFIGURAÇÕES (SETTINGS) =========
-
--- Cria a tabela "settings" para armazenar as configurações globais do aplicativo.
--- Teremos apenas uma linha nesta tabela, identificada pelo id=1.
 CREATE TABLE public.settings (
     id BIGINT PRIMARY KEY,
-    -- A coluna 'config' armazena o objeto JSON completo das configurações.
     config JSONB,
-    -- Registra automaticamente a data da última atualização.
     updated_at TIMESTAMPTZ DEFAULT now()
 );
-
--- Habilita a Segurança em Nível de Linha (RLS).
+COMMENT ON TABLE public.settings IS 'Armazena as configurações globais do app (1 linha).';
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
-
--- POLÍTICAS DE ACESSO PARA A TABELA 'settings'
-
--- Política 1: Permite que qualquer pessoa (mesmo não logada) leia as configurações.
--- Isso é necessário para que todos os visitantes vejam a landing page corretamente.
-CREATE POLICY "Allow public read access to settings"
-ON public.settings
-FOR SELECT
-USING (true);
-
--- Política 2: Permite que qualquer pessoa (protegido pela senha do admin no app) atualize as configurações.
--- Isso permite que o painel de admin salve as alterações no banco de dados.
-CREATE POLICY "Allow admin update access to settings"
-ON public.settings
-FOR UPDATE
-USING (true)
-WITH CHECK (true);
+CREATE POLICY "Allow public read access to settings" ON public.settings FOR SELECT USING (true);
+CREATE POLICY "Allow admin update access to settings" ON public.settings FOR UPDATE USING (true) WITH CHECK (true);
 
 
 -- ========= INSERIR DADOS INICIAIS =========
-
 -- Insere a configuração inicial na tabela 'settings'.
 -- O JSON abaixo contém todas as configurações padrão do aplicativo.
--- Copie o conteúdo de INITIAL_SETTINGS do arquivo src/context.tsx se precisar atualizar.
 INSERT INTO public.settings (id, config)
 VALUES (1, '{
   "landingPage": {
-    "heroTitleHighlight": "Perca 15kg",
-    "heroTitle": "em 90 Dias",
-    "heroSubtitle": "Sem Dietas Restritivas",
-    "heroDescription": "Descubra o método científico que já transformou mais de 10.000 mulheres.",
-    "heroImage": "https://i.imgur.com/gWahM2y.png",
+    "pageTitle": "Aptus Fit",
     "vslEnabled": false,
-    "beforeAndAfter": []
+    "beforeAndAfter": [],
+    "beforeAndAfterTitle": "Resultados Reais de Alunas Reais",
+    "brandName": "Aptus Fit",
+    "heroTitleHighlight": "Perca 5KG",
+    "heroTitle": "em 21 Dias",
+    "heroSubtitle": "Sem Dietas Restritivas",
+    "heroDescription": "Descubra o método científico que já transformou a vida de milhares de alunas.",
+    "heroImage": "https://i.imgur.com/gWahM2y.png"
   },
   "freeClassesSection": {
     "title": "3 Aulas Gratuitas Que Vão Mudar Sua Vida",
@@ -166,22 +121,24 @@ VALUES (1, '{
     ]
   },
   "lessons": [
-    { "id": 1, "moduleId": "Módulo Gratuito", "title": "AULA 1: O Início da Transformação", "description": "Descubra os pilares para um emagrecimento definitivo e saudável.", "videoId": "dQw4w9WgXcQ", "thumbnail": "https://i.imgur.com/8m92n3T.png" },
-    { "id": 2, "moduleId": "Módulo Gratuito", "title": "AULA 2: Treino Queima-Gordura", "description": "Um treino intenso e rápido para acelerar seu metabolismo ao máximo.", "videoId": "L_LUpnjgPso", "thumbnail": "https://i.imgur.com/gWahM2y.png" },
-    { "id": 3, "moduleId": "Módulo Gratuito", "title": "AULA 3: Alimentação Inteligente", "description": "Aprenda a comer bem sem passar fome e continue perdendo peso.", "videoId": "3tmd-ClpJxA", "thumbnail": "https://i.imgur.com/k4Pk2A9.png" },
+    { "id": 1, "moduleId": "Módulo Gratuito", "title": "AULA 1: O Início da Transformação", "description": "Descubra os pilares para um emagrecimento definitivo e saudável.", "videoId": "dQw4w9WgXcQ", "thumbnail": "https://i.imgur.com/8m92n3T.png", "isVip": false },
+    { "id": 2, "moduleId": "Módulo Gratuito", "title": "AULA 2: Treino Queima-Gordura", "description": "Um treino intenso e rápido para acelerar seu metabolismo ao máximo.", "videoId": "L_LUpnjgPso", "thumbnail": "https://i.imgur.com/gWahM2y.png", "isVip": false },
+    { "id": 3, "moduleId": "Módulo Gratuito", "title": "AULA 3: Alimentação Inteligente", "description": "Aprenda a comer bem sem passar fome e continue perdendo peso.", "videoId": "3tmd-ClpJxA", "thumbnail": "https://i.imgur.com/k4Pk2A9.png", "isVip": false },
     { "id": 4, "moduleId": "Programa VIP", "title": "AVANÇADO: Ciclos de Carboidratos", "description": "Domine a técnica de ciclagem de carboidratos para resultados extremos.", "videoId": "GFQ3_h3sHCY", "thumbnail": "https://i.imgur.com/Xys41F7.png", "isVip": true },
     { "id": 5, "moduleId": "Programa VIP", "title": "AVANÇADO: Treinamento com Pesos", "description": "Construa massa muscular magra e defina seu corpo.", "videoId": "GFQ3_h3sHCY", "thumbnail": "https://i.imgur.com/L8aD5fG.png", "isVip": true },
     { "id": 6, "moduleId": "Programa VIP", "title": "MENTALIDADE: Foco Inabalável", "description": "Desenvolva uma mentalidade de campeã para nunca mais desistir.", "videoId": "GFQ3_h3sHCY", "thumbnail": "https://i.imgur.com/tYmCgA9.png", "isVip": true }
   ],
   "testimonials": [
-    { "name": "Maria S., 34 anos", "text": "Eu não acreditava que seria possível, mas perdi 5kg no primeiro mês seguindo as aulas gratuitas! Mudou minha vida!", "image": "https://picsum.photos/seed/aluna1/100/100" },
+    { "name": "Maria S., 34 anos", "text": "Eu não acreditava que seria possível, mas perdi 5kg no primeiro mês seguindo as aulas gratuitas! Mudou minha vida!", "image": "https://picsum.photos/seed/aluna1/100/100", "videoId": null },
     { "name": "Juliana P., 28 anos", "text": "O treino é rápido, intenso e cabe na minha rotina corrida. Finalmente algo que funciona pra mim. Recomendo demais!", "image": "https://picsum.photos/seed/aluna2/100/100", "videoId": "3tmd-ClpJxA" },
-    { "name": "Carla M., 42 anos", "text": "Finalmente entendi como me alimentar direito sem passar fome. As dicas são de ouro!", "image": "https://picsum.photos/seed/aluna3/100/100" }
+    { "name": "Carla M., 42 anos", "text": "Finalmente entendi como me alimentar direito sem passar fome. As dicas são de ouro!", "image": "https://picsum.photos/seed/aluna3/100/100", "videoId": null }
   ],
   "upsellPage": {
+    "videoUrl": "https://www.youtube.com/embed/GFQ3_h3sHCY",
+    "fullPrice": "R$497,00",
+    "promoPrice": "R$197,00",
     "title": "SEU PRÓXIMO PASSO PARA A TRANSFORMAÇÃO COMPLETA!",
     "subtitle": "Você provou que é capaz. Agora, vamos acelerar seus resultados com minha consultoria premium.",
-    "subtitleNoMedia": "Você provou que é capaz. Dê o próximo passo e acelere seus resultados com minha consultoria premium.",
     "features": [
       "Acesso vitalício a todas as aulas VIP",
       "Treinos novos toda semana",
@@ -190,11 +147,15 @@ VALUES (1, '{
       "Suporte direto comigo para tirar dúvidas"
     ],
     "mediaType": "video",
-    "videoUrl": "https://www.youtube.com/embed/GFQ3_h3sHCY",
     "imageUrl": "https://i.imgur.com/L8aD5fG.png",
-    "fullPrice": "R$497,00",
-    "promoPrice": "R$197,00",
-    "ctaLink": "#"
+    "subtitleNoMedia": "Você provou que é capaz. Agora, vamos acelerar seus resultados com minha consultoria premium.",
+    "installmentsEnabled": true,
+    "installmentsNumber": 12,
+    "installmentsPrice": "R$19,70",
+    "ctaLink": "https://checkout.com"
+  },
+  "ai": {
+    "assessmentFeedbackFallback": "Olá, {name}! Recebemos sua avaliação. Estamos muito animadas para começar esta jornada com você e te ajudar a alcançar seu objetivo. Sua primeira aula já está liberada. Vamos com tudo!"
   },
   "freeAccessDays": 7,
   "offerCountdownHours": 24
@@ -222,7 +183,7 @@ Você vai precisar de até 3 chaves principais:
     *   Acesse o [Google AI Studio](https://aistudio.google.com/app/apikey).
     *   Faça login com sua conta Google.
     *   Clique em **"Create API key in new project"**.
-    *   Copie a chave gerada. Esta chave habilita a funcionalidade de feedback automático e personalizado para as alunas após a avaliação inicial. Se você não configurar esta chave, o sistema usará uma mensagem padrão.
+    *   Copie a chave gerada. Esta chave habilita a funcionalidade de feedback automático e personalizado para as alunas após a avaliação inicial. Se você não configurar esta chave, o sistema usará uma mensagem padrão que pode ser editada no seu painel de admin.
 
 **Guarde essas chaves em um local seguro.**
 
@@ -242,7 +203,7 @@ VITE_SUPABASE_KEY="COLE_AQUI_SUA_CHAVE_ANON_DO_SUPABASE"
 
 # Google Gemini API Key (Opcional, para o feedback da IA)
 # O sistema usará esta chave para gerar análises personalizadas.
-# Se esta variável não for definida, uma mensagem padrão será usada.
+# Se esta variável não for definida, a mensagem de fallback configurada no admin será usada.
 VITE_AI_FEEDBACK_API_KEY="COLE_AQUI_SUA_CHAVE_DA_API_DO_GEMINI"
 ```
 3.  Salve o arquivo. **Importante:** Este arquivo `.env` nunca deve ser enviado para o GitHub. Ele é apenas para o seu uso local.
@@ -264,7 +225,7 @@ A Vercel precisa encontrar seu código em um repositório do GitHub.
 3.  A Vercel vai mostrar seus repositórios do GitHub. **Selecione o repositório do seu aplicativo** que você criou no Passo 1 e clique em **"Import"**.
 4.  A Vercel vai detectar que é um projeto Vite e configurar tudo automaticamente. Antes de publicar, precisamos adicionar as chaves secretas.
 5.  Encontre e expanda a seção **"Environment Variables"** (Variáveis de Ambiente).
-6.  Adicione as 3 variáveis, uma de cada vez, usando as chaves que você obteve na Parte 2:
+6.  Adicione as variáveis, uma de cada vez, usando as chaves que você obteve na Parte 2:
     *   **Variável 1:**
         *   **NAME:** `VITE_SUPABASE_URL`
         *   **VALUE:** Cole aqui a sua **URL do Supabase**.
@@ -274,7 +235,7 @@ A Vercel precisa encontrar seu código em um repositório do GitHub.
     *   **Variável 3 (Opcional):**
         *   **NAME:** `VITE_AI_FEEDBACK_API_KEY`
         *   **VALUE:** Cole aqui a sua **chave da API do Gemini**.
-7.  Após adicionar as três, clique no botão azul **"Deploy"**.
+7.  Após adicionar, clique no botão azul **"Deploy"**.
 8.  Aguarde alguns minutos. A Vercel vai instalar tudo e publicar seu site.
 
 ### Passo 3: Seu aplicativo está no ar!

@@ -1,3 +1,4 @@
+
 # Guia Completo do Aplicativo FitConsult
 
 Olá! Este documento é um guia para te ajudar a entender e gerenciar todas as partes do seu aplicativo de fitness, mesmo que você não entenda de programação. Ele foi feito para que você possa encontrar facilmente onde alterar textos, imagens, aulas e outras configurações, e também para saber quais arquivos de código são responsáveis por cada funcionalidade.
@@ -9,13 +10,10 @@ Olá! Este documento é um guia para te ajudar a entender e gerenciar todas as p
 4.  [Painel da Aluna (Dashboard)](#4-painel-da-aluna-dashboard)
 5.  [Página de Oferta (Upsell)](#5-página-de-oferta-upsell)
 6.  [Painel Administrativo: O seu Centro de Controle](#6-painel-administrativo-o-seu-centro-de-controle)
-    *   [Métricas Principais](#métricas-principais)
-    *   [Configurações Gerais](#configurações-gerais)
-    *   [Conteúdo da Landing Page](#conteúdo-da-landing-page)
-    *   [Seção "Conheça o Treinador"](#seção-conheça-o-treinador)
-    *   [Aulas Gratuitas e VIP](#aulas-gratuitas-e-vip)
-    *   [Depoimentos](#depoimentos)
-    *   [Gerenciar Alunos](#gerenciar-alunos)
+    *   [Métricas e Alunos](#métricas-e-alunos)
+    *   [Aulas](#aulas)
+    *   [Conteúdo (Landing Page, Coach, Depoimentos, etc.)](#conteúdo-landing-page-coach-depoimentos-etc)
+    *   [Configurações (Gerais e IA)](#configurações-gerais-e-ia)
 
 ---
 
@@ -41,7 +39,6 @@ Esta seção descreve os elementos visuais que formam a identidade do seu aplica
 Se o seu aplicativo fosse um carro, estes seriam os papéis de cada peça principal. Todos os arquivos de código-fonte agora vivem dentro da pasta `src`.
 
 *   `index.html`: O **chassi** do carro. Estrutura base que carrega tudo, define as cores e fontes.
-*   `package.json`: A **lista de peças** do carro. Define todas as dependências do projeto e os scripts para rodar e construir o app.
 *   `src/context.tsx`: O **motor e o painel de controle** do carro. Guarda todos os dados (alunas, progresso, configurações), salva e busca informações do banco de dados (Supabase) e mantém tudo sincronizado. É o cérebro do app.
 *   `src/components.tsx`: A **caixa de ferramentas e peças**. Contém todos os componentes visuais reutilizáveis: `CTAButton` (botões laranja), `Modal` (pop-ups), `Carousel` (carrossel de aulas), `LessonCard` (card de aula), ícones, etc.
 *   `src/LandingPage.tsx`, `src/DashboardPage.tsx`, `src/UpsellPage.tsx`, `src/AdminPage.tsx`: As **partes do carro montadas**. São as páginas que a usuária vê, construídas usando as peças do `components.tsx` e os dados do `context.tsx`.
@@ -90,8 +87,7 @@ Esta página é mostrada para vender seu programa completo. Ela é altamente cus
 
 *   **Funcionalidades e Botões:**
     *   **Mídia Principal:** Você pode escolher entre exibir um **Vídeo de Vendas** do YouTube, uma **Imagem de Oferta** ou **Nenhum** elemento visual. O layout se adapta automaticamente.
-    *   **Textos Adaptáveis:** Se você escolher não usar mídia, pode definir um subtítulo alternativo para que a página não fique com um espaço vazio.
-    *   **Preço e Parcelamento:** Você pode definir o preço cheio, o preço promocional e habilitar/desabilitar a opção de parcelamento, definindo o número de parcelas e o valor de cada uma.
+    *   **Preço e Parcelamento:** Você pode definir o preço cheio, o preço promocional e habilitar/desabilitar a opção de parcelamento.
     *   **Botão "QUERO ENTRAR AGORA":** O principal `CTAButton` da página, que redireciona para o link de checkout que você definir no painel de admin.
 
 *   **Localização no Código:**
@@ -104,27 +100,32 @@ Esta página é mostrada para vender seu programa completo. Ela é altamente cus
 
 Esta é a sua área de gerenciamento. Para acessar, visite `[URL_DO_SEU_APP]/#/admin`.
 
-*   **Botão "Salvar Todas as Alterações":** Este `CTAButton`, localizado no final da página, é o mais importante. Ele pega todas as mudanças que você fez e as salva no `localStorage` do navegador, para que o resto do aplicativo possa usá-las.
-
-*   **Botão "Exportar para CSV":** Gera e baixa uma planilha com os dados de todas as alunas, ideal para análises.
+*   **Botão "Salvar Alterações":** Este `CTAButton`, localizado no topo, é o mais importante. Ele pega todas as mudanças que você fez e as salva no banco de dados (Supabase).
 
 *   **Localização no Código:**
     *   **Estrutura e Lógica:** `src/AdminPage.tsx` contém toda a interface e as funções para alterar as configurações.
-    *   **Salvando os Dados:** A função `handleSave` chama o `src/context.tsx` para executar a ação `UPDATE_SETTINGS`, que persiste as novas configurações.
+    *   **Salvando os Dados:** A função `handleSave` envia as novas configurações para o Supabase. O `src/context.tsx` então garante que todo o aplicativo use esses novos dados.
 
-#### Onde cada configuração do Admin é usada:
+#### Abas do Painel Administrativo
 
-*   **Configurações Gerais:**
-    *   *Tempo de Acesso Gratuito:* Usado em `src/DashboardPage.tsx` para calcular o tempo restante no `CountdownTimer` e em `src/App.tsx` para redirecionar para a página de upsell quando o tempo expira.
-*   **Conteúdo da Landing Page:**
-    *   *Título, Subtítulo e Imagem Principal (Hero):* Exibidos no topo do `src/LandingPage.tsx`. A imagem pode ser carregada do seu computador ou inserida via URL.
-*   **Seção "Conheça o Treinador":**
-    *   *Nome, Imagem, Bio, Certificações:* Todos esses dados são exibidos na seção "CONHEÇA SEU TREINADOR" no `src/LandingPage.tsx`.
-*   **Aulas Gratuitas e VIP:**
-    *   *Título, ID do Vídeo, Descrição, Thumbnail:* Usados para construir os `LessonCard` no `src/DashboardPage.tsx`. A imagem de thumbnail pode ser carregada do seu computador ou inserida via URL.
-*   **Depoimentos:**
-    *   *Nome, Imagem, Texto, Vídeo:* Usados para construir os `TestimonialCard` no `src/LandingPage.tsx`.
-*   **Gerenciar Alunos:**
-    *   A tabela lista todas as alunas com seus dados principais, como nome, e-mail, WhatsApp e progresso nas aulas.
+*   **Métricas e Alunos:**
+    *   **Métricas:** Veja um resumo rápido do número total de alunas, quantas concluíram o conteúdo gratuito e o progresso médio.
+    *   **Alunos:** Uma tabela detalhada com todas as suas alunas.
+    *   **Botão "Exportar para CSV":** Gera e baixa uma planilha com os dados de todas as alunas, ideal para análises.
+
+*   **Aulas:**
+    *   Gerencie todas as suas aulas, tanto as gratuitas quanto as VIP.
+    *   Você pode editar títulos, descrições, IDs de vídeo do YouTube, marcar aulas como VIP e **enviar uma imagem de thumbnail do seu computador** ou usar uma URL.
+
+*   **Conteúdo (Landing Page, Coach, Depoimentos, etc.):**
+    *   **Landing Page:** Controle todos os textos (títulos, subtítulos, descrições) e a **imagem principal (Hero), que pode ser enviada do seu computador**.
+    *   **Fotos Antes & Depois:** Adicione e gerencie as fotos de resultados das suas alunas.
+    *   **Conheça o Treinador:** Edite o nome, a biografia, as certificações e a **foto do treinador (upload do computador)**.
+    *   **Página de Upsell:** Configure todos os aspectos da sua página de vendas, incluindo textos, preços, link de checkout e o tipo de mídia a ser exibida.
+    *   **Depoimentos:** Adicione, edite ou remova depoimentos. Você pode usar uma URL para a imagem da aluna ou **enviá-la do seu computador**.
+
+*   **Configurações (Gerais e IA):**
+    *   **Gerais:** Defina o tempo de acesso gratuito em dias e a duração do contador de oferta em horas.
+    *   **Configurações de IA:** Personalize o **texto de fallback** que é mostrado à aluna caso a análise de avaliação pela Inteligência Artificial falhe. Você pode usar a variável `{name}` para inserir o nome da aluna automaticamente na mensagem.
 
 Com este guia, você tem total autonomia para gerenciar e evoluir seu aplicativo. Boas vendas!

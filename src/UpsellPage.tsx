@@ -1,10 +1,11 @@
+
 import { useApp } from './context.tsx';
 import { CountdownTimer, CTAButton, CheckIcon } from './components.tsx';
 
 const UpsellPage = () => {
     const { state } = useApp();
     const { upsellPage } = state.settings;
-    const offerEndDate = Date.now() + state.settings.offerCountdownHours * 60 * 60 * 1000;
+    const offerEndDate = Date.now() + (state.settings.offerCountdownHours || 24) * 60 * 60 * 1000;
 
     const subtitleText = (upsellPage.mediaType === 'none' && upsellPage.subtitleNoMedia)
         ? upsellPage.subtitleNoMedia
