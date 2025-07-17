@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useApp } from './context.tsx';
 import { AdminSettings, Lesson, Testimonial, BeforeAndAfterImage } from './types.ts';
@@ -28,18 +27,22 @@ const extractYouTubeId = (url: string): string => {
 
 // --- ETAPA 5: Admin Panel ---
 const AdminPage = () => {
-    const { state, dispatch } = useApp();
+    const { state, saveSettings } = useApp();
     const [settings, setSettings] = useState(state.settings);
     const [isSaving, setIsSaving] = useState(false);
     const [activeTab, setActiveTab] = useState<AdminTab>('metrics');
 
-    const handleSave = () => {
+    const handleSave = async () => {
         setIsSaving(true);
-        dispatch({ type: 'UPDATE_SETTINGS', payload: settings });
-        setTimeout(() => {
+        try {
+            await saveSettings(settings);
+            alert('Configurações salvas com sucesso!');
+        } catch (error) {
+            alert('Falha ao salvar as configurações. Verifique o console para mais detalhes.');
+            console.error(error);
+        } finally {
             setIsSaving(false);
-            alert('Configurações salvas!');
-        }, 1000);
+        }
     };
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, section: keyof AdminSettings, field: string) => {

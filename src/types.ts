@@ -119,4 +119,5 @@ export interface AppContextType {
   state: AppState;
   dispatch: React.Dispatch<Action>;
   logout: () => void;
+  saveSettings: (settings: AdminSettings) => Promise<void>;
 }
