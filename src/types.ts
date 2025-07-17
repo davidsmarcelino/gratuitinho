@@ -125,7 +125,7 @@ export interface AppContextType {
   logout: () => void;
 }
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
       users: {
@@ -199,4 +199,4 @@ export interface Database {
       [_ in never]: never;
     };
   };
-}
+};

@@ -58,12 +58,12 @@ const AssessmentForm: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
                 const prompt = `
                     Você é a "FitConsult AI", uma coach de fitness virtual para mulheres. Seu tom é motivador, empático e positivo. Use frases curtas e diretas.
                     A aluna ${state.user?.name} preencheu uma avaliação:
-                    - Objetivo: ${goalMap[baseAssessmentData.goal]}
-                    - Local de Treino: ${trainingLocationMap[baseAssessmentData.trainingLocation]}
-                    - Nível de Atividade: ${activityMap[baseAssessmentData.activityLevel]}
+                    - Objetivo: ${baseAssessmentData.goal ? goalMap[baseAssessmentData.goal] : 'Não informado'}
+                    - Local de Treino: ${baseAssessmentData.trainingLocation ? trainingLocationMap[baseAssessmentData.trainingLocation] : 'Não informado'}
+                    - Nível de Atividade: ${baseAssessmentData.activityLevel ? activityMap[baseAssessmentData.activityLevel] : 'Não informado'}
                     - Qualidade do Sono: ${baseAssessmentData.sleepQuality}/5
                     - Qualidade da Alimentação: ${baseAssessmentData.foodQuality}/5
-                    - IMC: ${baseAssessmentData.imc.toFixed(1)}
+                    - IMC: ${baseAssessmentData.imc ? baseAssessmentData.imc.toFixed(1) : 'N/A'}
                     Gere uma mensagem de boas-vindas e análise (máximo de 4-5 frases). A mensagem deve:
                     1. Cumprimentar a aluna pelo nome.
                     2. Fazer uma análise encorajadora baseada nos dados, mencionando o local de treino para personalizar a dica, e focando no potencial de melhoria.
